@@ -1,2 +1,5 @@
 .idea/
 .dev/
+/.sisyphus/
+/.playwright-mcp/
+.DS_Store

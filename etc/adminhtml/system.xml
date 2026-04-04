@@ -1,0 +1,241 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="antom" translate="label comment" type="text" sortOrder="50" showInDefault="1"
+                   showInWebsite="1" showInStore="1">
+                <label>Antom Payment</label>
+                <comment><![CDATA[Accept credit card, Google Pay, and Apple Pay via <a href="https://www.antom.com" target="_blank">Antom</a> (Ant International).]]></comment>
+
+                <!-- 1. Enable/Disable -->
+                <field id="active" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>payment/antom/active</config_path>
+                </field>
+
+                <!-- 2. Payment Title -->
+                <field id="title" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Title</label>
+                    <config_path>payment/antom/title</config_path>
+                </field>
+
+                <!-- 3. Environment -->
+                <field id="environment" translate="label comment" type="select" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Environment</label>
+                    <comment>Sandbox uses SANDBOX_ prefixed Client ID. Live uses production credentials.</comment>
+                    <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\Environment</source_model>
+                    <config_path>payment/antom/environment</config_path>
+                </field>
+
+                <!-- 4. Sandbox Credentials -->
+                <group id="sandbox_credentials" translate="label" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Sandbox Credentials</label>
+                    <depends>
+                        <field id="environment">sandbox</field>
+                    </depends>
+
+                    <field id="sandbox_client_id" translate="label comment" type="text" sortOrder="10"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Client ID</label>
+                        <comment>Sandbox Client ID (starts with SANDBOX_)</comment>
+                        <config_path>payment/antom/sandbox_client_id</config_path>
+                    </field>
+
+                    <field id="sandbox_merchant_private_key" translate="label comment" type="textarea" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Merchant Private Key</label>
+                        <comment>RSA private key for signing API requests (PEM format).</comment>
+                        <config_path>payment/antom/sandbox_merchant_private_key</config_path>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+
+                    <field id="sandbox_alipay_public_key" translate="label comment" type="textarea" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Alipay Public Key</label>
+                        <comment>Antom/Alipay public key for verifying notification signatures (PEM format).</comment>
+                        <config_path>payment/antom/sandbox_alipay_public_key</config_path>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                </group>
+
+                <!-- 5. Live Credentials -->
+                <group id="live_credentials" translate="label" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Live Credentials</label>
+                    <depends>
+                        <field id="environment">live</field>
+                    </depends>
+
+                    <field id="live_client_id" translate="label" type="text" sortOrder="10"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Client ID</label>
+                        <config_path>payment/antom/live_client_id</config_path>
+                    </field>
+
+                    <field id="live_merchant_private_key" translate="label comment" type="textarea" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Merchant Private Key</label>
+                        <comment>RSA private key for signing API requests (PEM format).</comment>
+                        <config_path>payment/antom/live_merchant_private_key</config_path>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+
+                    <field id="live_alipay_public_key" translate="label comment" type="textarea" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Alipay Public Key</label>
+                        <comment>Antom/Alipay public key for verifying notification signatures (PEM format).</comment>
+                        <config_path>payment/antom/live_alipay_public_key</config_path>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                </group>
+
+                <!-- 6. Notification URL (readonly note) -->
+                <field id="notification_url" translate="label comment" type="note" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Notification URL</label>
+                    <comment>Configure this URL in your Antom merchant portal.</comment>
+                    <frontend_model>CaravanGlory\Antom\Block\Adminhtml\System\Config\NotificationUrl</frontend_model>
+                </field>
+
+                <!-- 7. Payment Action -->
+                <field id="payment_action" translate="label" type="select" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Payment Action</label>
+                    <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\PaymentAction</source_model>
+                    <config_path>payment/antom/payment_action</config_path>
+                </field>
+
+                <!-- 8. Debug Log -->
+                <field id="debug" translate="label comment" type="select" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Debug</label>
+                    <comment>Log API requests/responses to var/log/antom.log (sensitive data redacted).</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>payment/antom/debug</config_path>
+                </field>
+
+                <!-- 9. Sort Order -->
+                <field id="sort_order" translate="label" type="text" sortOrder="90"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Sort Order</label>
+                    <config_path>payment/antom/sort_order</config_path>
+                    <validate>validate-number</validate>
+                    <frontend_class>validate-number</frontend_class>
+                </field>
+
+                <!-- 10. Min Order Amount -->
+                <field id="min_order_total" translate="label" type="text" sortOrder="100"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Minimum Order Total</label>
+                    <config_path>payment/antom/min_order_total</config_path>
+                    <validate>validate-number</validate>
+                    <frontend_class>validate-number</frontend_class>
+                </field>
+
+                <!-- 11. Max Order Amount -->
+                <field id="max_order_total" translate="label" type="text" sortOrder="110"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Maximum Order Total</label>
+                    <config_path>payment/antom/max_order_total</config_path>
+                    <validate>validate-number</validate>
+                    <frontend_class>validate-number</frontend_class>
+                </field>
+
+                <!-- 12. Credit Card subgroup -->
+                <group id="cc_settings" translate="label" type="text" sortOrder="200"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Credit / Debit Card</label>
+
+                    <field id="cc_active" translate="label" type="select" sortOrder="10"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Credit Card</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/antom/cc_active</config_path>
+                    </field>
+                </group>
+
+                <!-- 13. Google Pay subgroup -->
+                <group id="googlepay_settings" translate="label" type="text" sortOrder="300"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Google Pay</label>
+
+                    <field id="googlepay_active" translate="label" type="select" sortOrder="10"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Google Pay</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/antom/googlepay_active</config_path>
+                    </field>
+
+                    <field id="googlepay_merchant_id" translate="label comment" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Google Pay Merchant ID</label>
+                        <comment>Your Google Pay Merchant ID from the Google Pay Business Console.</comment>
+                        <config_path>payment/antom/googlepay_merchant_id</config_path>
+                        <depends>
+                            <field id="googlepay_active">1</field>
+                        </depends>
+                    </field>
+
+                    <field id="googlepay_button_color" translate="label" type="select" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Color</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\GooglePay\ButtonColor</source_model>
+                        <config_path>payment/antom/googlepay_button_color</config_path>
+                        <depends>
+                            <field id="googlepay_active">1</field>
+                        </depends>
+                    </field>
+
+                    <field id="googlepay_button_type" translate="label" type="select" sortOrder="40"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Type</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\GooglePay\ButtonType</source_model>
+                        <config_path>payment/antom/googlepay_button_type</config_path>
+                        <depends>
+                            <field id="googlepay_active">1</field>
+                        </depends>
+                    </field>
+                </group>
+
+                <!-- 14. Apple Pay subgroup -->
+                <group id="applepay_settings" translate="label" type="text" sortOrder="400"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Apple Pay</label>
+
+                    <field id="applepay_active" translate="label" type="select" sortOrder="10"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Apple Pay</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/antom/applepay_active</config_path>
+                    </field>
+
+                    <field id="applepay_button_color" translate="label" type="select" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Color</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\ApplePay\ButtonColor</source_model>
+                        <config_path>payment/antom/applepay_button_color</config_path>
+                        <depends>
+                            <field id="applepay_active">1</field>
+                        </depends>
+                    </field>
+
+                    <field id="applepay_button_type" translate="label" type="select" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Button Type</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\ApplePay\ButtonType</source_model>
+                        <config_path>payment/antom/applepay_button_type</config_path>
+                        <depends>
+                            <field id="applepay_active">1</field>
+                        </depends>
+                    </field>
+                </group>
+            </group>
+        </section>
+    </system>
+</config>

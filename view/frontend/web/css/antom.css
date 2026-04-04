@@ -1,0 +1,9 @@
+.antom-payment-container {
+    min-height: 40px;
+    position: relative;
+}
+
+.antom-payment-container iframe {
+    border: none;
+    width: 100%;
+}

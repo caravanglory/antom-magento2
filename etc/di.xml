@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <type name="CaravanGlory\Antom\Controller\Payment\CreateSession">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
+    <type name="CaravanGlory\Antom\Gateway\Http\TransferFactory">
+        <arguments>
+            <argument name="transferBuilder" xsi:type="object">Magento\Payment\Gateway\Http\TransferBuilder</argument>
+        </arguments>
+    </type>
+
+    <!-- ================================================================== -->
+    <!-- Gateway Commands                                                    -->
+    <!-- Each command: Builder -> TransferFactory -> Client -> Handler/Valid  -->
+    <!-- ================================================================== -->
+
+    <!-- CreateSession Command -->
+    <virtualType name="AntomCreateSessionCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\CreateSessionBuilder</argument>
+            <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="handler" xsi:type="object">CaravanGlory\Antom\Gateway\Response\PaymentSessionHandler</argument>
+            <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Capture Command -->
+    <virtualType name="AntomCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\CaptureBuilder</argument>
+            <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Refund Command -->
+    <virtualType name="AntomRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\RefundBuilder</argument>
+            <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="handler" xsi:type="object">CaravanGlory\Antom\Gateway\Response\RefundHandler</argument>
+            <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Cancel Command -->
+    <virtualType name="AntomCancelCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\CancelBuilder</argument>
+            <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Inquiry Command -->
+    <virtualType name="AntomInquiryCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\InquiryBuilder</argument>
+            <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ================================================================== -->
+    <!-- Command Pool                                                        -->
+    <!-- Shared by all 3 payment methods (CC, Google Pay, Apple Pay)         -->
+    <!-- ================================================================== -->
+    <virtualType name="AntomCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="create_session" xsi:type="object">AntomCreateSessionCommand</item>
+                <item name="capture" xsi:type="object">AntomCaptureCommand</item>
+                <item name="refund" xsi:type="object">AntomRefundCommand</item>
+                <item name="void" xsi:type="object">AntomCancelCommand</item>
+                <item name="cancel" xsi:type="object">AntomCancelCommand</item>
+                <item name="inquiry" xsi:type="object">AntomInquiryCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ================================================================== -->
+    <!-- Value Handler Pool                                                  -->
+    <!-- Maps payment config keys to their config path readers               -->
+    <!-- ================================================================== -->
+    <virtualType name="AntomCcValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="object">AntomCcConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomCcConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="routeConfigClass" xsi:type="object">AntomCcGatewayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomCcGatewayConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_CC</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomGooglePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="object">AntomGooglePayConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomGooglePayConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="routeConfigClass" xsi:type="object">AntomGooglePayGatewayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomGooglePayGatewayConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_GOOGLEPAY</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomApplePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="object">AntomApplePayConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomApplePayConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="routeConfigClass" xsi:type="object">AntomApplePayGatewayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomApplePayGatewayConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_APPLEPAY</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ================================================================== -->
+    <!-- Payment Method Facades                                              -->
+    <!-- 3 separate Magento payment methods sharing the same CommandPool     -->
+    <!-- ================================================================== -->
+    <virtualType name="AntomCcFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_CC</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">AntomCcValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomGooglePayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_GOOGLEPAY</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">AntomGooglePayValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomApplePayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_APPLEPAY</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">AntomApplePayValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ================================================================== -->
+    <!-- Custom Logger: var/log/antom.log                                    -->
+    <!-- ================================================================== -->
+    <virtualType name="AntomLogHandler" type="Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="fileName" xsi:type="string">/var/log/antom.log</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomLogger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">antom</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">AntomLogHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="CaravanGlory\Antom\Gateway\Http\Client">
+        <arguments>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
+    <type name="CaravanGlory\Antom\Controller\Notification\Index">
+        <arguments>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
+    <type name="CaravanGlory\Antom\Model\Notification\Processor">
+        <arguments>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
+</config>

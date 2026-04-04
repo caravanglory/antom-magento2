@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="magewire.plugin.scripts">
+            <block name="antom.card.csp.js"
+                   template="CaravanGlory_Antom::payment/antom-card-csp-js.phtml"/>
+            <block name="antom.googlepay.csp.js"
+                   template="CaravanGlory_Antom::payment/antom-googlepay-csp-js.phtml"/>
+            <block name="antom.applepay.csp.js"
+                   template="CaravanGlory_Antom::payment/antom-applepay-csp-js.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

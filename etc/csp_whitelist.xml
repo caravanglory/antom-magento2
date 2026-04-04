@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
+    <policies>
+        <policy id="script-src">
+            <values>
+                <value id="antom-sdk" type="host">https://sdk.marmot-cloud.com</value>
+            </values>
+        </policy>
+        <policy id="frame-src">
+            <values>
+                <value id="antom-sdk-frame" type="host">https://sdk.marmot-cloud.com</value>
+                <value id="google-pay-frame" type="host">https://pay.google.com</value>
+            </values>
+        </policy>
+        <policy id="connect-src">
+            <values>
+                <value id="antom-api" type="host">https://*.marmot-cloud.com</value>
+            </values>
+        </policy>
+    </policies>
+</csp_whitelist>

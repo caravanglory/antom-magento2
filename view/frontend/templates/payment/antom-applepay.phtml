@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+
+$containerId = 'antom-applepay-container';
+?>
+
+<div id="<?= $escaper->escapeHtmlAttr($containerId) ?>"
+     class="antom-payment-container antom-applepay-container"
+     x-data="antomApplePay()">
+</div>

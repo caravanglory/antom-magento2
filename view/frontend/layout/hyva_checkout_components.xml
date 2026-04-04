@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="checkout.payment.methods">
+            <block name="checkout.payment.method.antom-cc"
+                   as="antom_cc"
+                   template="CaravanGlory_Antom::payment/antom-card.phtml"/>
+
+            <block name="checkout.payment.method.antom-googlepay"
+                   as="antom_googlepay"
+                   template="CaravanGlory_Antom::payment/antom-googlepay.phtml"/>
+
+            <block name="checkout.payment.method.antom-applepay"
+                   as="antom_applepay"
+                   template="CaravanGlory_Antom::payment/antom-applepay.phtml"/>
+        </referenceBlock>
+    </body>
+</page>
