@@ -235,6 +235,19 @@
                         </depends>
                     </field>
                 </group>
+
+                <!-- 15. Hosted Payment subgroup -->
+                <group id="hosted_settings" translate="label" type="text" sortOrder="500"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Hosted Payment</label>
+
+                    <field id="hosted_active" translate="label" type="select" sortOrder="10"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Hosted Payment</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/antom/hosted_active</config_path>
+                    </field>
+                </group>
             </group>
         </section>
     </system>

@@ -8,6 +8,7 @@
                 <item name="antom_cc" xsi:type="object">CaravanGlory\Antom\Model\Magewire\Payment\AntomPlaceOrderService</item>
                 <item name="antom_googlepay" xsi:type="object">CaravanGlory\Antom\Model\Magewire\Payment\AntomPlaceOrderService</item>
                 <item name="antom_applepay" xsi:type="object">CaravanGlory\Antom\Model\Magewire\Payment\AntomPlaceOrderService</item>
+                <item name="antom_hosted" xsi:type="object">CaravanGlory\Antom\Model\Magewire\Payment\AntomHostedPlaceOrderService</item>
             </argument>
         </arguments>
     </type>

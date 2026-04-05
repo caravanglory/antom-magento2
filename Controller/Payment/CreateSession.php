@@ -17,12 +17,13 @@ use Psr\Log\LoggerInterface;
 
 class CreateSession implements HttpPostActionInterface
 {
-    private const ALLOWED_PAYMENT_TYPES = ['CARD', 'GOOGLEPAY', 'APPLEPAY'];
+    private const ALLOWED_PAYMENT_TYPES = ['CARD', 'GOOGLEPAY', 'APPLEPAY', 'HOSTED'];
 
     private const METHOD_TYPE_MAP = [
         'CARD' => ConfigProvider::CODE_CC,
         'GOOGLEPAY' => ConfigProvider::CODE_GOOGLEPAY,
         'APPLEPAY' => ConfigProvider::CODE_APPLEPAY,
+        'HOSTED' => ConfigProvider::CODE_HOSTED,
     ];
 
     private RequestInterface $request;

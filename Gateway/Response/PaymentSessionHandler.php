@@ -34,5 +34,12 @@ class PaymentSessionHandler implements HandlerInterface
                 $response['paymentSessionExpiryTime']
             );
         }
+
+        if (!empty($response['normalUrl'])) {
+            $payment->setAdditionalInformation(
+                'normal_url',
+                $response['normalUrl']
+            );
+        }
     }
 }

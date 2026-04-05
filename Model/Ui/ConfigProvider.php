@@ -12,6 +12,7 @@ class ConfigProvider implements ConfigProviderInterface
     public const CODE_CC = 'antom_cc';
     public const CODE_GOOGLEPAY = 'antom_googlepay';
     public const CODE_APPLEPAY = 'antom_applepay';
+    public const CODE_HOSTED = 'antom_hosted';
 
     private Config $config;
 
@@ -39,6 +40,10 @@ class ConfigProvider implements ConfigProviderInterface
                     'sdkEnvironment' => $this->config->getSdkEnvironment(),
                     'buttonColor' => $this->config->getApplePayButtonColor(),
                     'buttonType' => $this->config->getApplePayButtonType(),
+                ],
+                self::CODE_HOSTED => [
+                    'isActive' => $this->config->isActive() && $this->config->isHostedActive(),
+                    'isRedirect' => true,
                 ],
             ],
         ];

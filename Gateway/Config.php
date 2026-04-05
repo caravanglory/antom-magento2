@@ -207,6 +207,15 @@ class Config
         );
     }
 
+    public function isHostedActive(?int $storeId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(
+            self::XML_PATH_PREFIX . 'hosted_active',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
     /**
      * Antom captureMode: "AUTOMATIC" for authorize_capture, "MANUAL" for authorize-only.
      * Maps Magento payment_action config to the Antom API captureMode parameter.

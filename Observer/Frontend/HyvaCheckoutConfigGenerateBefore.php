@@ -48,6 +48,10 @@ class HyvaCheckoutConfigGenerateBefore implements ObserverInterface
                     'buttonColor' => $this->config->getApplePayButtonColor(),
                     'buttonType' => $this->config->getApplePayButtonType(),
                 ],
+                ConfigProvider::CODE_HOSTED => [
+                    'active' => $this->config->isHostedActive(),
+                    'sdkPaymentMethodType' => 'HOSTED',
+                ],
             ],
         ];
 

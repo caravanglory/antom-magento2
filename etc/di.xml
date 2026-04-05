@@ -153,6 +153,26 @@
         </arguments>
     </virtualType>
 
+    <virtualType name="AntomHostedValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="object">AntomHostedConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomHostedConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="routeConfigClass" xsi:type="object">AntomHostedGatewayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomHostedGatewayConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_HOSTED</argument>
+        </arguments>
+    </virtualType>
+
     <!-- ================================================================== -->
     <!-- Payment Method Facades                                              -->
     <!-- 3 separate Magento payment methods sharing the same CommandPool     -->
@@ -183,6 +203,16 @@
             <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
             <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
             <argument name="valueHandlerPool" xsi:type="object">AntomApplePayValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="AntomHostedFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">CaravanGlory\Antom\Model\Ui\ConfigProvider::CODE_HOSTED</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">AntomHostedValueHandlerPool</argument>
             <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
         </arguments>
     </virtualType>

@@ -65,7 +65,7 @@ class CreateSessionBuilder implements BuilderInterface
 
         $request = new AlipayPaymentSessionRequest();
         $request->setProductCode(ProductCodeType::CASHIER_PAYMENT);
-        $request->setProductScene('ELEMENT_PAYMENT');
+        $request->setProductScene($paymentMethodType === 'HOSTED' ? 'CASHIER' : 'ELEMENT_PAYMENT');
         $request->setPaymentRequestId($paymentRequestId);
         $request->setOrder($antomOrder);
         $request->setPaymentAmount($amount);
