@@ -1,0 +1,10 @@
+{
+    "sales_order_payment": {
+        "column": {
+            "antom_payment_id": true
+        },
+        "index": {
+            "SALES_ORDER_PAYMENT_ANTOM_PAYMENT_ID": true
+        }
+    }
+}
