@@ -105,7 +105,7 @@
     <virtualType name="AntomCcValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
         <arguments>
             <argument name="handlers" xsi:type="array">
-                <item name="default" xsi:type="object">AntomCcConfigValueHandler</item>
+                <item name="default" xsi:type="string">AntomCcConfigValueHandler</item>
             </argument>
         </arguments>
     </virtualType>
@@ -125,7 +125,7 @@
     <virtualType name="AntomGooglePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
         <arguments>
             <argument name="handlers" xsi:type="array">
-                <item name="default" xsi:type="object">AntomGooglePayConfigValueHandler</item>
+                <item name="default" xsi:type="string">AntomGooglePayConfigValueHandler</item>
             </argument>
         </arguments>
     </virtualType>
@@ -145,7 +145,7 @@
     <virtualType name="AntomApplePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
         <arguments>
             <argument name="handlers" xsi:type="array">
-                <item name="default" xsi:type="object">AntomApplePayConfigValueHandler</item>
+                <item name="default" xsi:type="string">AntomApplePayConfigValueHandler</item>
             </argument>
         </arguments>
     </virtualType>
@@ -165,7 +165,7 @@
     <virtualType name="AntomHostedValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
         <arguments>
             <argument name="handlers" xsi:type="array">
-                <item name="default" xsi:type="object">AntomHostedConfigValueHandler</item>
+                <item name="default" xsi:type="string">AntomHostedConfigValueHandler</item>
             </argument>
         </arguments>
     </virtualType>
