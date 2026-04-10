@@ -24,19 +24,14 @@ class Config
         $this->encryptor = $encryptor;
     }
 
+    // ---------------------------------------------------------------
+    // Shared config (payment/antom/*)
+    // ---------------------------------------------------------------
+
     public function isActive(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
             self::XML_PATH_PREFIX . 'active',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function getTitle(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'title',
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
@@ -88,15 +83,6 @@ class Config
         return $this->encryptor->decrypt($encrypted);
     }
 
-    public function getPaymentAction(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'payment_action',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
     public function isDebugEnabled(?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
@@ -106,111 +92,14 @@ class Config
         );
     }
 
-    public function getSortOrder(?int $storeId = null): int
-    {
-        return (int)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'sort_order',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
+    // ---------------------------------------------------------------
+    // Per-method config (payment/{methodCode}/*)
+    // ---------------------------------------------------------------
 
-    public function getMinOrderTotal(?int $storeId = null): ?float
-    {
-        $value = $this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'min_order_total',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-        return $value !== null && $value !== '' ? (float)$value : null;
-    }
-
-    public function getMaxOrderTotal(?int $storeId = null): ?float
-    {
-        $value = $this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'max_order_total',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-        return $value !== null && $value !== '' ? (float)$value : null;
-    }
-
-    public function isCcActive(?int $storeId = null): bool
+    public function isMethodActive(string $methodCode, ?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_PREFIX . 'cc_active',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function isGooglePayActive(?int $storeId = null): bool
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_PREFIX . 'googlepay_active',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function getGooglePayMerchantId(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'googlepay_merchant_id',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function getGooglePayButtonColor(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'googlepay_button_color',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function getGooglePayButtonType(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'googlepay_button_type',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function isApplePayActive(?int $storeId = null): bool
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_PREFIX . 'applepay_active',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function getApplePayButtonColor(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'applepay_button_color',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function getApplePayButtonType(?int $storeId = null): string
-    {
-        return (string)$this->scopeConfig->getValue(
-            self::XML_PATH_PREFIX . 'applepay_button_type',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    public function isHostedActive(?int $storeId = null): bool
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_PREFIX . 'hosted_active',
+            'payment/' . $methodCode . '/active',
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
@@ -220,10 +109,72 @@ class Config
      * Antom captureMode: "AUTOMATIC" for authorize_capture, "MANUAL" for authorize-only.
      * Maps Magento payment_action config to the Antom API captureMode parameter.
      */
-    public function getCaptureMode(?int $storeId = null): string
+    public function getCaptureMode(string $methodCode, ?int $storeId = null): string
     {
-        return $this->getPaymentAction($storeId) === 'authorize_capture' ? 'AUTOMATIC' : 'MANUAL';
+        $paymentAction = (string)$this->scopeConfig->getValue(
+            'payment/' . $methodCode . '/payment_action',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+        return $paymentAction === 'authorize_capture' ? 'AUTOMATIC' : 'MANUAL';
     }
+
+    // ---------------------------------------------------------------
+    // Google Pay config (payment/antom_googlepay/*)
+    // ---------------------------------------------------------------
+
+    public function getGooglePayMerchantId(?int $storeId = null): string
+    {
+        return (string)$this->scopeConfig->getValue(
+            'payment/antom_googlepay/merchant_id',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getGooglePayButtonColor(?int $storeId = null): string
+    {
+        return (string)$this->scopeConfig->getValue(
+            'payment/antom_googlepay/button_color',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getGooglePayButtonType(?int $storeId = null): string
+    {
+        return (string)$this->scopeConfig->getValue(
+            'payment/antom_googlepay/button_type',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // Apple Pay config (payment/antom_applepay/*)
+    // ---------------------------------------------------------------
+
+    public function getApplePayButtonColor(?int $storeId = null): string
+    {
+        return (string)$this->scopeConfig->getValue(
+            'payment/antom_applepay/button_color',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getApplePayButtonType(?int $storeId = null): string
+    {
+        return (string)$this->scopeConfig->getValue(
+            'payment/antom_applepay/button_type',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // SDK helpers
+    // ---------------------------------------------------------------
 
     /**
      * Web SDK environment string: "sandbox" or "production".

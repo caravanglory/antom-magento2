@@ -123,7 +123,7 @@ class Processor
                 return;
             }
 
-            $captureMode = $this->config->getCaptureMode((int)$order->getStoreId());
+            $captureMode = $this->config->getCaptureMode($order->getPayment()->getMethod(), (int)$order->getStoreId());
             $stateData = $this->statusResolver->resolvePaymentNotification($resultStatus, $captureMode);
 
             $payment->setAdditionalInformation('antom_payment_id', $paymentId);

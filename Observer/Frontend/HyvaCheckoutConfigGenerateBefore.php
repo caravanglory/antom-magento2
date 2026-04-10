@@ -32,24 +32,24 @@ class HyvaCheckoutConfigGenerateBefore implements ObserverInterface
             'createSessionUrl' => 'antom/payment/createsession',
             'methods' => [
                 ConfigProvider::CODE_CC => [
-                    'active' => $this->config->isCcActive(),
+                    'active' => $this->config->isMethodActive(ConfigProvider::CODE_CC),
                     'sdkPaymentMethodType' => 'CARD',
                 ],
                 ConfigProvider::CODE_GOOGLEPAY => [
-                    'active' => $this->config->isGooglePayActive(),
+                    'active' => $this->config->isMethodActive(ConfigProvider::CODE_GOOGLEPAY),
                     'sdkPaymentMethodType' => 'GOOGLEPAY',
                     'buttonColor' => $this->config->getGooglePayButtonColor(),
                     'buttonType' => $this->config->getGooglePayButtonType(),
                     'merchantId' => $this->config->getGooglePayMerchantId(),
                 ],
                 ConfigProvider::CODE_APPLEPAY => [
-                    'active' => $this->config->isApplePayActive(),
+                    'active' => $this->config->isMethodActive(ConfigProvider::CODE_APPLEPAY),
                     'sdkPaymentMethodType' => 'APPLEPAY',
                     'buttonColor' => $this->config->getApplePayButtonColor(),
                     'buttonType' => $this->config->getApplePayButtonType(),
                 ],
                 ConfigProvider::CODE_HOSTED => [
-                    'active' => $this->config->isHostedActive(),
+                    'active' => $this->config->isMethodActive(ConfigProvider::CODE_HOSTED),
                     'sdkPaymentMethodType' => 'HOSTED',
                 ],
             ],

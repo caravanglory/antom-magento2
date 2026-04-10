@@ -33,23 +33,23 @@ class ConfigProvider implements ConfigProviderInterface
         return [
             'payment' => [
                 self::CODE_CC => [
-                    'isActive' => $this->config->isActive($storeId) && $this->config->isCcActive($storeId),
+                    'isActive' => $this->config->isActive($storeId) && $this->config->isMethodActive(self::CODE_CC, $storeId),
                     'sdkEnvironment' => $this->config->getSdkEnvironment($storeId),
                 ],
                 self::CODE_GOOGLEPAY => [
-                    'isActive' => $this->config->isActive($storeId) && $this->config->isGooglePayActive($storeId),
+                    'isActive' => $this->config->isActive($storeId) && $this->config->isMethodActive(self::CODE_GOOGLEPAY, $storeId),
                     'sdkEnvironment' => $this->config->getSdkEnvironment($storeId),
                     'buttonColor' => $this->config->getGooglePayButtonColor($storeId),
                     'buttonType' => $this->config->getGooglePayButtonType($storeId),
                 ],
                 self::CODE_APPLEPAY => [
-                    'isActive' => $this->config->isActive($storeId) && $this->config->isApplePayActive($storeId),
+                    'isActive' => $this->config->isActive($storeId) && $this->config->isMethodActive(self::CODE_APPLEPAY, $storeId),
                     'sdkEnvironment' => $this->config->getSdkEnvironment($storeId),
                     'buttonColor' => $this->config->getApplePayButtonColor($storeId),
                     'buttonType' => $this->config->getApplePayButtonType($storeId),
                 ],
                 self::CODE_HOSTED => [
-                    'isActive' => $this->config->isActive($storeId) && $this->config->isHostedActive($storeId),
+                    'isActive' => $this->config->isActive($storeId) && $this->config->isMethodActive(self::CODE_HOSTED, $storeId),
                     'isRedirect' => true,
                 ],
             ],

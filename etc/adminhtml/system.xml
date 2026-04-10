@@ -11,7 +11,7 @@
                 <frontend_model>CaravanGlory\Antom\Block\Adminhtml\Config\Fieldset</frontend_model>
                 <attribute type="displayIn">recommended_solutions</attribute>
 
-                <!-- 1. Enable/Disable -->
+                <!-- 1. Enable/Disable (master switch) -->
                 <field id="active" translate="label" type="select" sortOrder="10"
                        showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Enabled</label>
@@ -19,15 +19,8 @@
                     <config_path>payment/antom/active</config_path>
                 </field>
 
-                <!-- 2. Payment Title -->
-                <field id="title" translate="label" type="text" sortOrder="20"
-                       showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Title</label>
-                    <config_path>payment/antom/title</config_path>
-                </field>
-
-                <!-- 3. Environment -->
-                <field id="environment" translate="label comment" type="select" sortOrder="30"
+                <!-- 2. Environment -->
+                <field id="environment" translate="label comment" type="select" sortOrder="20"
                        showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Environment</label>
                     <comment>Sandbox uses SANDBOX_ prefixed Client ID. Live uses production credentials.</comment>
@@ -35,8 +28,8 @@
                     <config_path>payment/antom/environment</config_path>
                 </field>
 
-                <!-- 4. Sandbox Credentials -->
-                <group id="sandbox_credentials" translate="label" type="text" sortOrder="40"
+                <!-- 3. Sandbox Credentials -->
+                <group id="sandbox_credentials" translate="label" type="text" sortOrder="30"
                        showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Sandbox Credentials</label>
                     <depends>
@@ -67,8 +60,8 @@
                     </field>
                 </group>
 
-                <!-- 5. Live Credentials -->
-                <group id="live_credentials" translate="label" type="text" sortOrder="50"
+                <!-- 4. Live Credentials -->
+                <group id="live_credentials" translate="label" type="text" sortOrder="40"
                        showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Live Credentials</label>
                     <depends>
@@ -98,24 +91,16 @@
                     </field>
                 </group>
 
-                <!-- 6. Notification URL (readonly note) -->
-                <field id="notification_url" translate="label comment" type="note" sortOrder="60"
+                <!-- 5. Notification URL (readonly note) -->
+                <field id="notification_url" translate="label comment" type="note" sortOrder="50"
                        showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Notification URL</label>
                     <comment>Configure this URL in your Antom merchant portal.</comment>
                     <frontend_model>CaravanGlory\Antom\Block\Adminhtml\System\Config\NotificationUrl</frontend_model>
                 </field>
 
-                <!-- 7. Payment Action -->
-                <field id="payment_action" translate="label" type="select" sortOrder="70"
-                       showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Payment Action</label>
-                    <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\PaymentAction</source_model>
-                    <config_path>payment/antom/payment_action</config_path>
-                </field>
-
-                <!-- 8. Debug Log -->
-                <field id="debug" translate="label comment" type="select" sortOrder="80"
+                <!-- 6. Debug Log -->
+                <field id="debug" translate="label comment" type="select" sortOrder="60"
                        showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Debug</label>
                     <comment>Log API requests/responses to var/log/antom.log (sensitive data redacted).</comment>
@@ -123,132 +108,261 @@
                     <config_path>payment/antom/debug</config_path>
                 </field>
 
-                <!-- 9. Sort Order -->
-                <field id="sort_order" translate="label" type="text" sortOrder="90"
-                       showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Sort Order</label>
-                    <config_path>payment/antom/sort_order</config_path>
-                    <validate>validate-number</validate>
-                    <frontend_class>validate-number</frontend_class>
-                </field>
-
-                <!-- 10. Min Order Amount -->
-                <field id="min_order_total" translate="label" type="text" sortOrder="100"
-                       showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Minimum Order Total</label>
-                    <config_path>payment/antom/min_order_total</config_path>
-                    <validate>validate-number</validate>
-                    <frontend_class>validate-number</frontend_class>
-                </field>
-
-                <!-- 11. Max Order Amount -->
-                <field id="max_order_total" translate="label" type="text" sortOrder="110"
-                       showInDefault="1" showInWebsite="1" showInStore="0">
-                    <label>Maximum Order Total</label>
-                    <config_path>payment/antom/max_order_total</config_path>
-                    <validate>validate-number</validate>
-                    <frontend_class>validate-number</frontend_class>
-                </field>
-
-                <!-- 12. Credit Card subgroup -->
+                <!-- ============================================================ -->
+                <!-- Credit / Debit Card                                          -->
+                <!-- ============================================================ -->
                 <group id="cc_settings" translate="label" type="text" sortOrder="200"
                        showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Credit / Debit Card</label>
 
-                    <field id="cc_active" translate="label" type="select" sortOrder="10"
+                    <field id="active" translate="label" type="select" sortOrder="10"
                            showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Enable Credit Card</label>
+                        <label>Enabled</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/antom/cc_active</config_path>
+                        <config_path>payment/antom_cc/active</config_path>
+                    </field>
+
+                    <field id="title" translate="label" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Title</label>
+                        <config_path>payment/antom_cc/title</config_path>
+                    </field>
+
+                    <field id="payment_action" translate="label" type="select" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Action</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\PaymentAction</source_model>
+                        <config_path>payment/antom_cc/payment_action</config_path>
+                    </field>
+
+                    <field id="sort_order" translate="label" type="text" sortOrder="40"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Sort Order</label>
+                        <config_path>payment/antom_cc/sort_order</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="min_order_total" translate="label" type="text" sortOrder="50"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Minimum Order Total</label>
+                        <config_path>payment/antom_cc/min_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="max_order_total" translate="label" type="text" sortOrder="60"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Maximum Order Total</label>
+                        <config_path>payment/antom_cc/max_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
                     </field>
                 </group>
 
-                <!-- 13. Google Pay subgroup -->
+                <!-- ============================================================ -->
+                <!-- Google Pay                                                   -->
+                <!-- ============================================================ -->
                 <group id="googlepay_settings" translate="label" type="text" sortOrder="300"
                        showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Google Pay</label>
 
-                    <field id="googlepay_active" translate="label" type="select" sortOrder="10"
+                    <field id="active" translate="label" type="select" sortOrder="10"
                            showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Enable Google Pay</label>
+                        <label>Enabled</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/antom/googlepay_active</config_path>
+                        <config_path>payment/antom_googlepay/active</config_path>
                     </field>
 
-                    <field id="googlepay_merchant_id" translate="label comment" type="text" sortOrder="20"
+                    <field id="title" translate="label" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Title</label>
+                        <config_path>payment/antom_googlepay/title</config_path>
+                    </field>
+
+                    <field id="payment_action" translate="label" type="select" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Action</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\PaymentAction</source_model>
+                        <config_path>payment/antom_googlepay/payment_action</config_path>
+                    </field>
+
+                    <field id="merchant_id" translate="label comment" type="text" sortOrder="40"
                            showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Google Pay Merchant ID</label>
                         <comment>Your Google Pay Merchant ID from the Google Pay Business Console.</comment>
-                        <config_path>payment/antom/googlepay_merchant_id</config_path>
+                        <config_path>payment/antom_googlepay/merchant_id</config_path>
                         <depends>
-                            <field id="googlepay_active">1</field>
+                            <field id="active">1</field>
                         </depends>
                     </field>
 
-                    <field id="googlepay_button_color" translate="label" type="select" sortOrder="30"
+                    <field id="button_color" translate="label" type="select" sortOrder="50"
                            showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Button Color</label>
                         <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\GooglePay\ButtonColor</source_model>
-                        <config_path>payment/antom/googlepay_button_color</config_path>
+                        <config_path>payment/antom_googlepay/button_color</config_path>
                         <depends>
-                            <field id="googlepay_active">1</field>
+                            <field id="active">1</field>
                         </depends>
                     </field>
 
-                    <field id="googlepay_button_type" translate="label" type="select" sortOrder="40"
+                    <field id="button_type" translate="label" type="select" sortOrder="60"
                            showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Button Type</label>
                         <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\GooglePay\ButtonType</source_model>
-                        <config_path>payment/antom/googlepay_button_type</config_path>
+                        <config_path>payment/antom_googlepay/button_type</config_path>
                         <depends>
-                            <field id="googlepay_active">1</field>
+                            <field id="active">1</field>
                         </depends>
+                    </field>
+
+                    <field id="sort_order" translate="label" type="text" sortOrder="70"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Sort Order</label>
+                        <config_path>payment/antom_googlepay/sort_order</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="min_order_total" translate="label" type="text" sortOrder="80"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Minimum Order Total</label>
+                        <config_path>payment/antom_googlepay/min_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="max_order_total" translate="label" type="text" sortOrder="90"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Maximum Order Total</label>
+                        <config_path>payment/antom_googlepay/max_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
                     </field>
                 </group>
 
-                <!-- 14. Apple Pay subgroup -->
+                <!-- ============================================================ -->
+                <!-- Apple Pay                                                    -->
+                <!-- ============================================================ -->
                 <group id="applepay_settings" translate="label" type="text" sortOrder="400"
                        showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Apple Pay</label>
 
-                    <field id="applepay_active" translate="label" type="select" sortOrder="10"
+                    <field id="active" translate="label" type="select" sortOrder="10"
                            showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Enable Apple Pay</label>
+                        <label>Enabled</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/antom/applepay_active</config_path>
+                        <config_path>payment/antom_applepay/active</config_path>
                     </field>
 
-                    <field id="applepay_button_color" translate="label" type="select" sortOrder="20"
+                    <field id="title" translate="label" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Title</label>
+                        <config_path>payment/antom_applepay/title</config_path>
+                    </field>
+
+                    <field id="payment_action" translate="label" type="select" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Action</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\PaymentAction</source_model>
+                        <config_path>payment/antom_applepay/payment_action</config_path>
+                    </field>
+
+                    <field id="button_color" translate="label" type="select" sortOrder="40"
                            showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Button Color</label>
                         <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\ApplePay\ButtonColor</source_model>
-                        <config_path>payment/antom/applepay_button_color</config_path>
+                        <config_path>payment/antom_applepay/button_color</config_path>
                         <depends>
-                            <field id="applepay_active">1</field>
+                            <field id="active">1</field>
                         </depends>
                     </field>
 
-                    <field id="applepay_button_type" translate="label" type="select" sortOrder="30"
+                    <field id="button_type" translate="label" type="select" sortOrder="50"
                            showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Button Type</label>
                         <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\ApplePay\ButtonType</source_model>
-                        <config_path>payment/antom/applepay_button_type</config_path>
+                        <config_path>payment/antom_applepay/button_type</config_path>
                         <depends>
-                            <field id="applepay_active">1</field>
+                            <field id="active">1</field>
                         </depends>
+                    </field>
+
+                    <field id="sort_order" translate="label" type="text" sortOrder="60"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Sort Order</label>
+                        <config_path>payment/antom_applepay/sort_order</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="min_order_total" translate="label" type="text" sortOrder="70"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Minimum Order Total</label>
+                        <config_path>payment/antom_applepay/min_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="max_order_total" translate="label" type="text" sortOrder="80"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Maximum Order Total</label>
+                        <config_path>payment/antom_applepay/max_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
                     </field>
                 </group>
 
-                <!-- 15. Hosted Payment subgroup -->
+                <!-- ============================================================ -->
+                <!-- Hosted Payment                                               -->
+                <!-- ============================================================ -->
                 <group id="hosted_settings" translate="label" type="text" sortOrder="500"
                        showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Hosted Payment</label>
 
-                    <field id="hosted_active" translate="label" type="select" sortOrder="10"
+                    <field id="active" translate="label" type="select" sortOrder="10"
                            showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Enable Hosted Payment</label>
+                        <label>Enabled</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/antom/hosted_active</config_path>
+                        <config_path>payment/antom_hosted/active</config_path>
+                    </field>
+
+                    <field id="title" translate="label" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Title</label>
+                        <config_path>payment/antom_hosted/title</config_path>
+                    </field>
+
+                    <field id="payment_action" translate="label" type="select" sortOrder="30"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Action</label>
+                        <source_model>CaravanGlory\Antom\Model\Adminhtml\Source\PaymentAction</source_model>
+                        <config_path>payment/antom_hosted/payment_action</config_path>
+                    </field>
+
+                    <field id="sort_order" translate="label" type="text" sortOrder="40"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Sort Order</label>
+                        <config_path>payment/antom_hosted/sort_order</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="min_order_total" translate="label" type="text" sortOrder="50"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Minimum Order Total</label>
+                        <config_path>payment/antom_hosted/min_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
+                    </field>
+
+                    <field id="max_order_total" translate="label" type="text" sortOrder="60"
+                           showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Maximum Order Total</label>
+                        <config_path>payment/antom_hosted/max_order_total</config_path>
+                        <validate>validate-number</validate>
+                        <frontend_class>validate-number</frontend_class>
                     </field>
                 </group>
             </group>
