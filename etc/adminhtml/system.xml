@@ -6,7 +6,6 @@
             <group id="antom" translate="label comment" type="text" sortOrder="50" showInDefault="1"
                    showInWebsite="1" showInStore="1">
                 <label>Antom Payment</label>
-                <resource>CaravanGlory_Antom::config</resource>
                 <comment><![CDATA[Accept credit card, Google Pay, and Apple Pay via <a href="https://www.antom.com" target="_blank">Antom</a> (Ant International).]]></comment>
 
                 <!-- 1. Enable/Disable -->
