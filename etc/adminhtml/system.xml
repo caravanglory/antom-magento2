@@ -5,8 +5,11 @@
         <section id="payment">
             <group id="antom" translate="label comment" type="text" sortOrder="50" showInDefault="1"
                    showInWebsite="1" showInStore="1">
-                <label>Antom Payment</label>
+                <label>Antom</label>
                 <comment><![CDATA[Accept credit card, Google Pay, and Apple Pay via <a href="https://www.antom.com" target="_blank">Antom</a> (Ant International).]]></comment>
+                <fieldset_css>complex antom-admin-config</fieldset_css>
+                <frontend_model>CaravanGlory\Antom\Block\Adminhtml\Config\Fieldset</frontend_model>
+                <attribute type="displayIn">recommended_solutions</attribute>
 
                 <!-- 1. Enable/Disable -->
                 <field id="active" translate="label" type="select" sortOrder="10"

@@ -1,0 +1,19 @@
+.antom-admin-config .heading {
+    background: url('../img/antom-logo.svg') no-repeat 0 50% / 12rem auto;
+    padding-left: 14rem;
+}
+
+.antom-admin-config .button-container {
+    float: right;
+}
+
+.antom-admin-config::after {
+    content: '';
+    clear: both;
+    display: table;
+}
+
+#payment_us_antom {
+    float: left;
+    width: 100%;
+}
