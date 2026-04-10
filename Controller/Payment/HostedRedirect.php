@@ -6,20 +6,17 @@ namespace CaravanGlory\Antom\Controller\Payment;
 
 use CaravanGlory\Antom\Model\Ui\ConfigProvider;
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Framework\UrlInterface;
 use Magento\Payment\Gateway\Command\CommandPoolInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectFactoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
-class HostedRedirect implements HttpPostActionInterface
+class HostedRedirect implements HttpGetActionInterface
 {
-    private RequestInterface $request;
     private RedirectFactory $redirectFactory;
     private CheckoutSession $checkoutSession;
     private OrderRepositoryInterface $orderRepository;
@@ -27,20 +24,16 @@ class HostedRedirect implements HttpPostActionInterface
     private PaymentDataObjectFactoryInterface $paymentDataObjectFactory;
     private LoggerInterface $logger;
     private ManagerInterface $messageManager;
-    private UrlInterface $url;
 
     public function __construct(
-        RequestInterface $request,
         RedirectFactory $redirectFactory,
         CheckoutSession $checkoutSession,
         OrderRepositoryInterface $orderRepository,
         CommandPoolInterface $commandPool,
         PaymentDataObjectFactoryInterface $paymentDataObjectFactory,
         LoggerInterface $logger,
-        ManagerInterface $messageManager,
-        UrlInterface $url
+        ManagerInterface $messageManager
     ) {
-        $this->request = $request;
         $this->redirectFactory = $redirectFactory;
         $this->checkoutSession = $checkoutSession;
         $this->orderRepository = $orderRepository;
@@ -48,7 +41,6 @@ class HostedRedirect implements HttpPostActionInterface
         $this->paymentDataObjectFactory = $paymentDataObjectFactory;
         $this->logger = $logger;
         $this->messageManager = $messageManager;
-        $this->url = $url;
     }
 
     public function execute(): ResultInterface
@@ -56,18 +48,10 @@ class HostedRedirect implements HttpPostActionInterface
         $redirect = $this->redirectFactory->create();
 
         try {
-            $body = json_decode((string)$this->request->getContent(), true);
-            $incrementId = $body['order_increment_id'] ?? '';
-
-            if (empty($incrementId)) {
-                $this->messageManager->addErrorMessage((string)__('Missing order_increment_id'));
-                return $redirect->setPath('checkout/cart');
-            }
-
             $order = $this->checkoutSession->getLastRealOrder();
 
-            if (!$order || !$order->getEntityId() || $order->getIncrementId() !== $incrementId) {
-                $this->messageManager->addErrorMessage((string)__('Order not found or does not belong to current session'));
+            if (!$order || !$order->getEntityId()) {
+                $this->messageManager->addErrorMessage((string)__('Order not found in current session'));
                 return $redirect->setPath('checkout/cart');
             }
 
@@ -94,6 +78,11 @@ class HostedRedirect implements HttpPostActionInterface
                 $this->messageManager->addErrorMessage((string)__('Failed to create payment session'));
                 return $redirect->setPath('checkout/cart');
             }
+
+            $this->logger->info('Antom hosted redirect', [
+                'order_id' => $order->getIncrementId(),
+                'redirect_url' => $normalUrl,
+            ]);
 
             return $redirect->setUrl($normalUrl);
         } catch (\Exception $e) {

@@ -21,7 +21,7 @@ class CaptureBuilder implements BuilderInterface
 
         $paymentId = $payment->getAdditionalInformation('antom_payment_id');
         $incrementId = $order->getOrderIncrementId();
-        $captureRequestId = $incrementId . '_capture_' . (string)time();
+        $captureRequestId = $incrementId . '_capture_' . bin2hex(random_bytes(8));
 
         $amount = new Amount();
         $amount->setCurrency($order->getCurrencyCode());

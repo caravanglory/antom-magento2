@@ -6,6 +6,7 @@ namespace CaravanGlory\Antom\Model\Notification;
 
 use CaravanGlory\Antom\Gateway\Config;
 use CaravanGlory\Antom\Model\Order\StatusResolver;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -25,6 +26,7 @@ class Processor
     private StatusResolver $statusResolver;
     private Config $config;
     private LoggerInterface $logger;
+    private ResourceConnection $resourceConnection;
 
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -34,7 +36,8 @@ class Processor
         TransactionFactory $transactionFactory,
         StatusResolver $statusResolver,
         Config $config,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ResourceConnection $resourceConnection
     ) {
         $this->orderRepository = $orderRepository;
         $this->orderFactory = $orderFactory;
@@ -44,6 +47,7 @@ class Processor
         $this->statusResolver = $statusResolver;
         $this->config = $config;
         $this->logger = $logger;
+        $this->resourceConnection = $resourceConnection;
     }
 
     public function process(array $notification): void
@@ -56,6 +60,9 @@ class Processor
                 break;
             case 'CAPTURE_RESULT':
                 $this->processCaptureResult($notification);
+                break;
+            case 'REFUND_RESULT':
+                $this->processRefundResult($notification);
                 break;
             default:
                 $this->logger->info('Antom notification type not handled', ['type' => $notifyType]);
@@ -81,67 +88,94 @@ class Processor
             return;
         }
 
-        if ($this->statusResolver->isTerminalState($order->getState())) {
-            $this->logger->info('Antom notification: order already in terminal state', [
-                'order_id' => $order->getIncrementId(),
-                'state' => $order->getState(),
-            ]);
-            return;
-        }
+        $connection = $this->resourceConnection->getConnection();
+        $connection->beginTransaction();
 
-        $payment = $order->getPayment();
-        $existingPaymentId = $payment->getAdditionalInformation('antom_payment_id');
-        if (!empty($existingPaymentId) && $existingPaymentId === $paymentId) {
-            $this->logger->info('Antom notification: duplicate, skipping', [
-                'order_id' => $order->getIncrementId(),
-                'payment_id' => $paymentId,
-            ]);
-            return;
-        }
-
-        $captureMode = $this->config->getCaptureMode((int)$order->getStoreId());
-        $stateData = $this->statusResolver->resolvePaymentNotification($resultStatus, $captureMode);
-
-        $payment->setAdditionalInformation('antom_payment_id', $paymentId);
-        $payment->setData('antom_payment_id', $paymentId);
-
-        if (!empty($notification['paymentAmount'])) {
-            $payment->setAdditionalInformation(
-                'antom_payment_amount',
-                $notification['paymentAmount']['value'] ?? ''
+        try {
+            // Lock the order row to prevent concurrent notification processing
+            $connection->fetchRow(
+                $connection->select()
+                    ->from($this->resourceConnection->getTableName('sales_order'), ['entity_id'])
+                    ->where('entity_id = ?', $order->getEntityId())
+                    ->forUpdate(true)
             );
-            $payment->setAdditionalInformation(
-                'antom_payment_currency',
-                $notification['paymentAmount']['currency'] ?? ''
+
+            // Reload order after acquiring lock to get fresh state
+            $order = $this->orderFactory->create()->load($order->getEntityId());
+
+            if ($this->statusResolver->isTerminalState($order->getState())) {
+                $this->logger->info('Antom notification: order already in terminal state', [
+                    'order_id' => $order->getIncrementId(),
+                    'state' => $order->getState(),
+                ]);
+                $connection->commit();
+                return;
+            }
+
+            $payment = $order->getPayment();
+            $existingPaymentId = $payment->getAdditionalInformation('antom_payment_id');
+            if (!empty($existingPaymentId) && $existingPaymentId === $paymentId) {
+                $this->logger->info('Antom notification: duplicate, skipping', [
+                    'order_id' => $order->getIncrementId(),
+                    'payment_id' => $paymentId,
+                ]);
+                $connection->commit();
+                return;
+            }
+
+            $captureMode = $this->config->getCaptureMode((int)$order->getStoreId());
+            $stateData = $this->statusResolver->resolvePaymentNotification($resultStatus, $captureMode);
+
+            $payment->setAdditionalInformation('antom_payment_id', $paymentId);
+            $payment->setData('antom_payment_id', $paymentId);
+
+            if (!empty($notification['paymentAmount'])) {
+                $payment->setAdditionalInformation(
+                    'antom_payment_amount',
+                    $notification['paymentAmount']['value'] ?? ''
+                );
+                $payment->setAdditionalInformation(
+                    'antom_payment_currency',
+                    $notification['paymentAmount']['currency'] ?? ''
+                );
+            }
+
+            if ($this->statusResolver->shouldCreateInvoice($resultStatus, $captureMode)) {
+                $this->createInvoiceForOrder($order, $paymentId);
+            }
+
+            if ($this->statusResolver->shouldMarkAuthorized($resultStatus, $captureMode)) {
+                $payment->setIsTransactionClosed(false);
+                $payment->setTransactionId($paymentId);
+            }
+
+            if ($resultStatus === 'F') {
+                $order->cancel();
+            }
+
+            $order->setState($stateData['state']);
+            $order->setStatus($stateData['status']);
+            $order->addCommentToStatusHistory(
+                sprintf('Antom payment notification: %s (paymentId: %s)', $resultStatus, $paymentId)
             );
+
+            $this->orderRepository->save($order);
+
+            $connection->commit();
+
+            $this->logger->info('Antom payment notification processed', [
+                'order_id' => $order->getIncrementId(),
+                'result_status' => $resultStatus,
+                'new_state' => $stateData['state'],
+            ]);
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            $this->logger->error('Antom payment notification processing failed', [
+                'order_id' => $order->getIncrementId(),
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
         }
-
-        if ($this->statusResolver->shouldCreateInvoice($resultStatus, $captureMode)) {
-            $this->createInvoiceForOrder($order, $paymentId);
-        }
-
-        if ($this->statusResolver->shouldMarkAuthorized($resultStatus, $captureMode)) {
-            $payment->setIsTransactionClosed(false);
-            $payment->setTransactionId($paymentId);
-        }
-
-        if ($resultStatus === 'F') {
-            $order->cancel();
-        }
-
-        $order->setState($stateData['state']);
-        $order->setStatus($stateData['status']);
-        $order->addCommentToStatusHistory(
-            sprintf('Antom payment notification: %s (paymentId: %s)', $resultStatus, $paymentId)
-        );
-
-        $this->orderRepository->save($order);
-
-        $this->logger->info('Antom payment notification processed', [
-            'order_id' => $order->getIncrementId(),
-            'result_status' => $resultStatus,
-            'new_state' => $stateData['state'],
-        ]);
     }
 
     private function processCaptureResult(array $notification): void
@@ -180,6 +214,49 @@ class Processor
         $this->orderRepository->save($order);
     }
 
+    private function processRefundResult(array $notification): void
+    {
+        $paymentId = $notification['paymentId'] ?? '';
+        $resultStatus = $notification['result']['resultStatus'] ?? '';
+        $refundId = $notification['refundId'] ?? '';
+        $refundRequestId = $notification['refundRequestId'] ?? '';
+
+        if (empty($paymentId)) {
+            return;
+        }
+
+        $order = $this->findOrderByAntomPaymentId($paymentId);
+        if ($order === null) {
+            $this->logger->warning('Antom refund notification: order not found', [
+                'payment_id' => $paymentId,
+            ]);
+            return;
+        }
+
+        $statusLabel = $resultStatus === 'S' ? 'success' : ($resultStatus === 'F' ? 'failed' : 'unknown');
+        $order->addCommentToStatusHistory(
+            sprintf(
+                'Antom refund notification: %s (refundId: %s, refundRequestId: %s)',
+                $statusLabel,
+                $refundId,
+                $refundRequestId
+            )
+        );
+
+        if ($resultStatus === 'S' && !empty($refundId)) {
+            $payment = $order->getPayment();
+            $payment->setAdditionalInformation('antom_last_refund_id', $refundId);
+        }
+
+        $this->orderRepository->save($order);
+
+        $this->logger->info('Antom refund notification processed', [
+            'order_id' => $order->getIncrementId(),
+            'result_status' => $resultStatus,
+            'refund_id' => $refundId,
+        ]);
+    }
+
     private function createInvoiceForOrder(Order $order, string $transactionId): void
     {
         if (!$order->canInvoice()) {
@@ -198,7 +275,7 @@ class Processor
     }
 
     /**
-     * paymentRequestId format: "{increment_id}_{timestamp}"
+     * paymentRequestId format: "{increment_id}_{unique_suffix}"
      * Extracts increment_id by splitting at the last underscore.
      */
     private function findOrderByPaymentRequestId(string $paymentRequestId): ?Order

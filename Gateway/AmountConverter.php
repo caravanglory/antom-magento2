@@ -10,10 +10,20 @@ class AmountConverter
         'JPY', 'KRW', 'VND', 'BIF', 'CLP', 'GNF', 'ISK', 'PYG', 'RWF', 'UGX', 'XAF', 'XOF',
     ];
 
+    private const THREE_DECIMAL_CURRENCIES = [
+        'BHD', 'KWD', 'OMR',
+    ];
+
     public static function toMinorUnits(float $amount, string $currencyCode): string
     {
-        if (in_array(strtoupper($currencyCode), self::ZERO_DECIMAL_CURRENCIES, true)) {
+        $code = strtoupper($currencyCode);
+
+        if (in_array($code, self::ZERO_DECIMAL_CURRENCIES, true)) {
             return (string)(int)round($amount);
+        }
+
+        if (in_array($code, self::THREE_DECIMAL_CURRENCIES, true)) {
+            return (string)(int)round($amount * 1000);
         }
 
         return (string)(int)round($amount * 100);

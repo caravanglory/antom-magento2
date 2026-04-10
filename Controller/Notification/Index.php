@@ -61,10 +61,11 @@ class Index implements HttpPostActionInterface, CsrfAwareActionInterface
             $requestTime = (string)$this->request->getHeader('request-time');
             $signature = (string)$this->request->getHeader('signature');
             $clientId = (string)$this->request->getHeader('client-id');
+            $requestPath = (string)$this->request->getPathInfo();
 
             $isValid = $this->notificationValidator->validate(
                 'POST',
-                '/antom/notification/index',
+                $requestPath,
                 $requestTime,
                 $rawBody,
                 $signature

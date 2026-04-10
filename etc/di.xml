@@ -9,6 +9,13 @@
         </arguments>
     </type>
 
+    <type name="CaravanGlory\Antom\Controller\Payment\HostedRedirect">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
     <type name="CaravanGlory\Antom\Gateway\Http\TransferFactory">
         <arguments>
             <argument name="transferBuilder" xsi:type="object">Magento\Payment\Gateway\Http\TransferBuilder</argument>
@@ -37,6 +44,7 @@
             <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\CaptureBuilder</argument>
             <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
             <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="handler" xsi:type="object">CaravanGlory\Antom\Gateway\Response\CaptureHandler</argument>
             <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
         </arguments>
     </virtualType>
@@ -80,6 +88,7 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="create_session" xsi:type="object">AntomCreateSessionCommand</item>
+                <item name="authorize" xsi:type="object">CaravanGlory\Antom\Gateway\Command\AuthorizeCommand</item>
                 <item name="capture" xsi:type="object">AntomCaptureCommand</item>
                 <item name="refund" xsi:type="object">AntomRefundCommand</item>
                 <item name="void" xsi:type="object">AntomCancelCommand</item>

@@ -27,6 +27,9 @@
         "magento/module-quote": ">=101.2",
         "antom/global-open-sdk-php": "^1.0"
     },
+    "suggest": {
+        "hyva-themes/magento2-hyva-checkout": "Required for Hyvä Checkout integration (frontend payment forms)"
+    },
     "autoload": {
         "files": [
             "registration.php"

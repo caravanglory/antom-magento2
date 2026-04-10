@@ -38,7 +38,7 @@ class CreateSessionBuilder implements BuilderInterface
         $storeId = (int)$order->getStoreId();
 
         $incrementId = $order->getOrderIncrementId();
-        $paymentRequestId = $incrementId . '_' . (string)time();
+        $paymentRequestId = $incrementId . '_' . bin2hex(random_bytes(8));
         $paymentMethodType = $payment->getAdditionalInformation('payment_method_type') ?? 'CARD';
 
         $amount = new Amount();

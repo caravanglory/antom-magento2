@@ -21,7 +21,7 @@ class RefundBuilder implements BuilderInterface
 
         $paymentId = $payment->getAdditionalInformation('antom_payment_id');
         $incrementId = $order->getOrderIncrementId();
-        $refundRequestId = $incrementId . '_refund_' . (string)time();
+        $refundRequestId = $incrementId . '_refund_' . bin2hex(random_bytes(8));
 
         $amount = new Amount();
         $amount->setCurrency($order->getCurrencyCode());
