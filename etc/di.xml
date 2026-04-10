@@ -112,7 +112,7 @@
 
     <virtualType name="AntomCcConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
         <arguments>
-            <argument name="routeConfigClass" xsi:type="object">AntomCcGatewayConfig</argument>
+            <argument name="configInterface" xsi:type="object">AntomCcGatewayConfig</argument>
         </arguments>
     </virtualType>
 
@@ -132,7 +132,7 @@
 
     <virtualType name="AntomGooglePayConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
         <arguments>
-            <argument name="routeConfigClass" xsi:type="object">AntomGooglePayGatewayConfig</argument>
+            <argument name="configInterface" xsi:type="object">AntomGooglePayGatewayConfig</argument>
         </arguments>
     </virtualType>
 
@@ -152,7 +152,7 @@
 
     <virtualType name="AntomApplePayConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
         <arguments>
-            <argument name="routeConfigClass" xsi:type="object">AntomApplePayGatewayConfig</argument>
+            <argument name="configInterface" xsi:type="object">AntomApplePayGatewayConfig</argument>
         </arguments>
     </virtualType>
 
@@ -172,7 +172,7 @@
 
     <virtualType name="AntomHostedConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
         <arguments>
-            <argument name="routeConfigClass" xsi:type="object">AntomHostedGatewayConfig</argument>
+            <argument name="configInterface" xsi:type="object">AntomHostedGatewayConfig</argument>
         </arguments>
     </virtualType>
 
