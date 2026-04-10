@@ -19,6 +19,10 @@ $methodCode = 'antom_hosted';
 
         return {
             init() {
+                if (hyvaCheckout.payment.getByCode(METHOD_CODE)) {
+                    return;
+                }
+
                 hyvaCheckout.payment.registerMethod({
                     code: METHOD_CODE,
                     method: {
