@@ -87,13 +87,13 @@
     <virtualType name="AntomCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="create_session" xsi:type="object">AntomCreateSessionCommand</item>
-                <item name="authorize" xsi:type="object">CaravanGlory\Antom\Gateway\Command\AuthorizeCommand</item>
-                <item name="capture" xsi:type="object">AntomCaptureCommand</item>
-                <item name="refund" xsi:type="object">AntomRefundCommand</item>
-                <item name="void" xsi:type="object">AntomCancelCommand</item>
-                <item name="cancel" xsi:type="object">AntomCancelCommand</item>
-                <item name="inquiry" xsi:type="object">AntomInquiryCommand</item>
+                <item name="create_session" xsi:type="string">AntomCreateSessionCommand</item>
+                <item name="authorize" xsi:type="string">CaravanGlory\Antom\Gateway\Command\AuthorizeCommand</item>
+                <item name="capture" xsi:type="string">AntomCaptureCommand</item>
+                <item name="refund" xsi:type="string">AntomRefundCommand</item>
+                <item name="void" xsi:type="string">AntomCancelCommand</item>
+                <item name="cancel" xsi:type="string">AntomCancelCommand</item>
+                <item name="inquiry" xsi:type="string">AntomInquiryCommand</item>
             </argument>
         </arguments>
     </virtualType>
