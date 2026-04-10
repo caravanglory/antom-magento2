@@ -2,31 +2,27 @@
 
 declare(strict_types=1);
 
-namespace CaravanGlory\Antom\Observer\Frontend;
+namespace CaravanGlory\Antom\Model\Magewire\ServerMemoConfig;
 
 use CaravanGlory\Antom\Gateway\Config;
 use CaravanGlory\Antom\Model\Ui\ConfigProvider;
-use Magento\Framework\Event\Observer;
-use Magento\Framework\Event\ObserverInterface;
+use Hyva\Checkout\Model\Magewire\ServerMemoConfig\AbstractConfigSection;
 
-class HyvaCheckoutConfigGenerateBefore implements ObserverInterface
+class AntomConfig extends AbstractConfigSection
 {
     private Config $config;
 
-    public function __construct(Config $config)
-    {
+    public function __construct(
+        Config $config,
+        array $data = []
+    ) {
+        parent::__construct($data);
         $this->config = $config;
     }
 
-    public function execute(Observer $observer): void
+    public function getData(): array
     {
-        $config = $observer->getData('config');
-
-        if (!$config || !$this->isAnyMethodActive()) {
-            return;
-        }
-
-        $antomConfig = [
+        return [
             'sdkEnvironment' => $this->config->getSdkEnvironment(),
             'sdkUrl' => $this->config->getSdkUrl(),
             'createSessionUrl' => 'antom/payment/createsession',
@@ -54,15 +50,5 @@ class HyvaCheckoutConfigGenerateBefore implements ObserverInterface
                 ],
             ],
         ];
-
-        $config->addData(['antom' => $antomConfig]);
-    }
-
-    private function isAnyMethodActive(): bool
-    {
-        return $this->config->isMethodActive(ConfigProvider::CODE_CC)
-            || $this->config->isMethodActive(ConfigProvider::CODE_GOOGLEPAY)
-            || $this->config->isMethodActive(ConfigProvider::CODE_APPLEPAY)
-            || $this->config->isMethodActive(ConfigProvider::CODE_HOSTED);
     }
 }

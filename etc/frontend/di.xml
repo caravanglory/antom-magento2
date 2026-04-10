@@ -13,4 +13,12 @@
         </arguments>
     </type>
 
+    <type name="Hyva\Checkout\Model\Magewire\Hydrator\Config">
+        <arguments>
+            <argument name="serverMemoDataConfig" xsi:type="array">
+                <item name="antom" xsi:type="object">CaravanGlory\Antom\Model\Magewire\ServerMemoConfig\AntomConfig</item>
+            </argument>
+        </arguments>
+    </type>
+
 </config>
