@@ -103,88 +103,89 @@ use Magento\Framework\View\Element\Template;
             init() {
                 hyvaCheckout.payment.registerMethod({
                     code: METHOD_CODE,
+                    method: {
+                        async initialize() {
+                            await loadSdk();
+                        },
 
-                    async initialize() {
-                        await loadSdk();
-                    },
-
-                    async uninitialize() {
-                        destroySdk();
-                    },
-
-                    async validate() {
-                        return true;
-                    },
-
-                    async placeOrder({ fallback }) {
-                        if (submitting) return;
-                        submitting = true;
-
-                        try {
-                            await fallback();
-
-                            const order = hyvaCheckout.main.getWireComponent();
-                            const incrementId = order.get('order_increment_id')
-                                || hyvaCheckout.storage.getData('order_increment_id')
-                                || '';
-
-                            if (!incrementId) {
-                                throw new Error('Order was not created. Please try again.');
-                            }
-
-                            const sessionResponse = await createPaymentSession(incrementId);
-
-                            if (!sessionResponse.paymentSessionData) {
-                                throw new Error('Invalid payment session response');
-                            }
-
-                            const antomConfig = getAntomConfig();
-
-                            amsElement = new AMSElement({
-                                environment: antomConfig.sdkEnvironment || 'sandbox',
-                                locale: document.documentElement.lang || 'en_US',
-                                sessionData: sessionResponse.paymentSessionData
-                            });
-
-                            return new Promise((resolve, reject) => {
-                                amsElement.mount({
-                                    paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
-                                    onEventCallback: (event) => {
-                                        if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
-                                            destroySdk();
-                                            window.location.href = window.BASE_URL + 'checkout/onepage/success';
-                                            resolve(true);
-                                        } else if (event.code === 'SDK_PAYMENT_FAIL'
-                                            || event.code === 'SDK_PAYMENT_ERROR') {
-                                            destroySdk();
-                                            submitting = false;
-                                            const msg = event.message || 'Payment failed. Please try again.';
-                                            hyvaCheckout.message.alert(msg);
-                                            reject(new Error(msg));
-                                        } else if (event.code === 'SDK_PAYMENT_CANCEL') {
-                                            destroySdk();
-                                            submitting = false;
-                                            hyvaCheckout.message.warn('Payment was cancelled.');
-                                            reject(new Error('Payment cancelled'));
-                                        }
-                                    }
-                                }, '#' + CONTAINER_ID);
-
-                                amsElement.submitPayment();
-                            });
-                        } catch (error) {
+                        async uninitialize() {
                             destroySdk();
-                            submitting = false;
-                            throw error;
+                        },
+
+                        async validate() {
+                            return true;
+                        },
+
+                        async placeOrder({ fallback }) {
+                            if (submitting) return;
+                            submitting = true;
+
+                            try {
+                                await fallback();
+
+                                const order = hyvaCheckout.main.getWireComponent();
+                                const incrementId = order.get('order_increment_id')
+                                    || hyvaCheckout.storage.getData('order_increment_id')
+                                    || '';
+
+                                if (!incrementId) {
+                                    throw new Error('Order was not created. Please try again.');
+                                }
+
+                                const sessionResponse = await createPaymentSession(incrementId);
+
+                                if (!sessionResponse.paymentSessionData) {
+                                    throw new Error('Invalid payment session response');
+                                }
+
+                                const antomConfig = getAntomConfig();
+
+                                amsElement = new AMSElement({
+                                    environment: antomConfig.sdkEnvironment || 'sandbox',
+                                    locale: document.documentElement.lang || 'en_US',
+                                    sessionData: sessionResponse.paymentSessionData
+                                });
+
+                                return new Promise((resolve, reject) => {
+                                    amsElement.mount({
+                                        paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
+                                        onEventCallback: (event) => {
+                                            if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
+                                                destroySdk();
+                                                window.location.href = window.BASE_URL + 'checkout/onepage/success';
+                                                resolve(true);
+                                            } else if (event.code === 'SDK_PAYMENT_FAIL'
+                                                || event.code === 'SDK_PAYMENT_ERROR') {
+                                                destroySdk();
+                                                submitting = false;
+                                                const msg = event.message || 'Payment failed. Please try again.';
+                                                hyvaCheckout.message.alert(msg);
+                                                reject(new Error(msg));
+                                            } else if (event.code === 'SDK_PAYMENT_CANCEL') {
+                                                destroySdk();
+                                                submitting = false;
+                                                hyvaCheckout.message.warn('Payment was cancelled.');
+                                                reject(new Error('Payment cancelled'));
+                                            }
+                                        }
+                                    }, '#' + CONTAINER_ID);
+
+                                    amsElement.submitPayment();
+                                });
+                            } catch (error) {
+                                destroySdk();
+                                submitting = false;
+                                throw error;
+                            }
+                        },
+
+                        async canRedirect() {
+                            return false;
+                        },
+
+                        async getRedirectUrl() {
+                            return null;
                         }
-                    },
-
-                    async canRedirect() {
-                        return false;
-                    },
-
-                    async getRedirectUrl() {
-                        return null;
                     }
                 });
             }
