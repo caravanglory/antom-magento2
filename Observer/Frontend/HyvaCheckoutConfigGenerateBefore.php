@@ -22,7 +22,7 @@ class HyvaCheckoutConfigGenerateBefore implements ObserverInterface
     {
         $config = $observer->getData('config');
 
-        if (!$config || !$this->config->isActive()) {
+        if (!$config || !$this->isAnyMethodActive()) {
             return;
         }
 
@@ -56,5 +56,13 @@ class HyvaCheckoutConfigGenerateBefore implements ObserverInterface
         ];
 
         $config->addData(['antom' => $antomConfig]);
+    }
+
+    private function isAnyMethodActive(): bool
+    {
+        return $this->config->isMethodActive(ConfigProvider::CODE_CC)
+            || $this->config->isMethodActive(ConfigProvider::CODE_GOOGLEPAY)
+            || $this->config->isMethodActive(ConfigProvider::CODE_APPLEPAY)
+            || $this->config->isMethodActive(ConfigProvider::CODE_HOSTED);
     }
 }

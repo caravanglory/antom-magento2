@@ -28,15 +28,6 @@ class Config
     // Shared config (payment/antom/*)
     // ---------------------------------------------------------------
 
-    public function isActive(?int $storeId = null): bool
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_PREFIX . 'active',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
     public function getEnvironment(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(
