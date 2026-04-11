@@ -5,6 +5,7 @@
         <policy id="script-src">
             <values>
                 <value id="antom-sdk" type="host">https://sdk.marmot-cloud.com</value>
+                <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
             </values>
         </policy>
         <policy id="frame-src">
@@ -16,6 +17,7 @@
         <policy id="connect-src">
             <values>
                 <value id="antom-api" type="host">https://*.marmot-cloud.com</value>
+                <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
             </values>
         </policy>
     </policies>
