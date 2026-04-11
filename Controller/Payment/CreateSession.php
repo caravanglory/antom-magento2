@@ -99,7 +99,7 @@ class CreateSession implements HttpPostActionInterface
 
             $this->commandPool->get('create_session')->execute([
                 'payment' => $paymentDataObject,
-                'amount' => $order->getGrandTotal(),
+                'amount' => $order->getBaseGrandTotal(),
             ]);
 
             $this->orderRepository->save($order);

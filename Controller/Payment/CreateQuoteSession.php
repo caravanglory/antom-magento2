@@ -18,6 +18,12 @@ class CreateQuoteSession implements HttpPostActionInterface
 {
     private const ALLOWED_PAYMENT_TYPES = ['CARD', 'GOOGLEPAY', 'APPLEPAY'];
 
+    private const METHOD_TYPE_MAP = [
+        'CARD' => 'antom_cc',
+        'GOOGLEPAY' => 'antom_googlepay',
+        'APPLEPAY' => 'antom_applepay',
+    ];
+
     private RequestInterface $request;
     private JsonFactory $jsonFactory;
     private CheckoutSession $checkoutSession;
@@ -74,13 +80,15 @@ class CreateQuoteSession implements HttpPostActionInterface
             }
 
             $payment = $quote->getPayment();
+            $methodCode = self::METHOD_TYPE_MAP[$paymentMethodType];
+            $payment->setMethod($methodCode);
             $payment->setAdditionalInformation('payment_method_type', $paymentMethodType);
 
             $paymentDataObject = $this->paymentDataObjectFactory->create($payment);
 
             $this->commandPool->get('create_session')->execute([
                 'payment' => $paymentDataObject,
-                'amount' => $quote->getGrandTotal(),
+                'amount' => $quote->getBaseGrandTotal(),
             ]);
 
             $sessionData = $payment->getAdditionalInformation('payment_session_data');

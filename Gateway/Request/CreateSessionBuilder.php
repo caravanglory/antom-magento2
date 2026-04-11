@@ -41,12 +41,12 @@ class CreateSessionBuilder implements BuilderInterface
         $paymentRequestId = $incrementId . '_' . bin2hex(random_bytes(8));
         $paymentMethodType = $payment->getAdditionalInformation('payment_method_type') ?? 'CARD';
 
+        $grandTotal = (float)SubjectReader::readAmount($buildSubject);
+        $currencyCode = $order->getCurrencyCode();
+
         $amount = new Amount();
-        $amount->setCurrency($order->getCurrencyCode());
-        $amount->setValue(AmountConverter::toMinorUnits(
-            (float)$order->getGrandTotalAmount(),
-            $order->getCurrencyCode()
-        ));
+        $amount->setCurrency($currencyCode);
+        $amount->setValue(AmountConverter::toMinorUnits($grandTotal, $currencyCode));
 
         $antomOrder = new AntomOrder();
         $antomOrder->setReferenceOrderId($incrementId);
