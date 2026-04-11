@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CaravanGlory\Antom\Model\Notification;
 
+use CaravanGlory\Antom\Gateway\AmountConverter;
 use CaravanGlory\Antom\Gateway\Config;
 use CaravanGlory\Antom\Model\Order\StatusResolver;
 use Magento\Framework\App\ResourceConnection;
@@ -140,6 +141,29 @@ class Processor
                 );
             }
 
+            if ($resultStatus === 'S' && !$this->verifyNotificationAmount($order, $notification)) {
+                $order->setState(Order::STATE_PAYMENT_REVIEW);
+                $order->setStatus(Order::STATE_PAYMENT_REVIEW);
+                $order->addCommentToStatusHistory(
+                    sprintf(
+                        'Antom payment amount mismatch: notified %s %s, expected %s %s (paymentId: %s)',
+                        $notification['paymentAmount']['value'] ?? 'N/A',
+                        $notification['paymentAmount']['currency'] ?? 'N/A',
+                        AmountConverter::toMinorUnits((float)$order->getBaseGrandTotal(), $order->getBaseCurrencyCode()),
+                        $order->getBaseCurrencyCode(),
+                        $paymentId
+                    )
+                );
+                $this->orderRepository->save($order);
+                $connection->commit();
+
+                $this->logger->error('Antom payment amount mismatch', [
+                    'order_id' => $order->getIncrementId(),
+                    'payment_id' => $paymentId,
+                ]);
+                return;
+            }
+
             if ($this->statusResolver->shouldCreateInvoice($resultStatus, $captureMode)) {
                 $this->createInvoiceForOrder($order, $paymentId);
             }
@@ -196,22 +220,46 @@ class Processor
             return;
         }
 
-        if ($order->hasInvoices()) {
-            $this->logger->info('Antom capture notification: invoice already exists', [
+        $connection = $this->resourceConnection->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            $connection->fetchRow(
+                $connection->select()
+                    ->from($this->resourceConnection->getTableName('sales_order'), ['entity_id'])
+                    ->where('entity_id = ?', $order->getEntityId())
+                    ->forUpdate(true)
+            );
+
+            $order = $this->orderFactory->create()->load($order->getEntityId());
+
+            if ($order->hasInvoices()) {
+                $this->logger->info('Antom capture notification: invoice already exists', [
+                    'order_id' => $order->getIncrementId(),
+                ]);
+                $connection->commit();
+                return;
+            }
+
+            $this->createInvoiceForOrder($order, $captureId ?: $paymentId);
+
+            $order->setState(Order::STATE_PROCESSING);
+            $order->setStatus(Order::STATE_PROCESSING);
+            $order->addCommentToStatusHistory(
+                sprintf('Antom capture notification: captured (captureId: %s)', $captureId)
+            );
+
+            $this->orderRepository->save($order);
+
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            $this->logger->error('Antom capture notification processing failed', [
                 'order_id' => $order->getIncrementId(),
+                'message' => $e->getMessage(),
             ]);
-            return;
+            throw $e;
         }
-
-        $this->createInvoiceForOrder($order, $captureId ?: $paymentId);
-
-        $order->setState(Order::STATE_PROCESSING);
-        $order->setStatus(Order::STATE_PROCESSING);
-        $order->addCommentToStatusHistory(
-            sprintf('Antom capture notification: captured (captureId: %s)', $captureId)
-        );
-
-        $this->orderRepository->save($order);
     }
 
     private function processRefundResult(array $notification): void
@@ -293,6 +341,24 @@ class Processor
         }
 
         return null;
+    }
+
+    private function verifyNotificationAmount(Order $order, array $notification): bool
+    {
+        if (empty($notification['paymentAmount']['value']) || empty($notification['paymentAmount']['currency'])) {
+            return true;
+        }
+
+        $notifiedAmount = (string)$notification['paymentAmount']['value'];
+        $notifiedCurrency = (string)$notification['paymentAmount']['currency'];
+
+        $expectedAmount = AmountConverter::toMinorUnits(
+            (float)$order->getBaseGrandTotal(),
+            $order->getBaseCurrencyCode()
+        );
+        $expectedCurrency = $order->getBaseCurrencyCode();
+
+        return $notifiedAmount === $expectedAmount && $notifiedCurrency === $expectedCurrency;
     }
 
     private function findOrderByAntomPaymentId(string $paymentId): ?Order

@@ -73,6 +73,7 @@
             <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\CancelBuilder</argument>
             <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
             <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="handler" xsi:type="object">CaravanGlory\Antom\Gateway\Response\CancelHandler</argument>
             <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
         </arguments>
     </virtualType>
@@ -83,6 +84,7 @@
             <argument name="requestBuilder" xsi:type="object">CaravanGlory\Antom\Gateway\Request\InquiryBuilder</argument>
             <argument name="transferFactory" xsi:type="object">CaravanGlory\Antom\Gateway\Http\TransferFactory</argument>
             <argument name="client" xsi:type="object">CaravanGlory\Antom\Gateway\Http\Client</argument>
+            <argument name="handler" xsi:type="object">CaravanGlory\Antom\Gateway\Response\InquiryHandler</argument>
             <argument name="validator" xsi:type="object">CaravanGlory\Antom\Gateway\Validator\GeneralResponseValidator</argument>
         </arguments>
     </virtualType>

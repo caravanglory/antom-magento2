@@ -12,9 +12,16 @@ class StatusResolver
     public function resolvePaymentNotification(string $resultStatus, string $captureMode): array
     {
         if ($resultStatus === 'S') {
+            if ($captureMode === 'AUTOMATIC') {
+                return [
+                    'state' => Order::STATE_PROCESSING,
+                    'status' => Order::STATE_PROCESSING,
+                ];
+            }
+
             return [
-                'state' => Order::STATE_PROCESSING,
-                'status' => Order::STATE_PROCESSING,
+                'state' => Order::STATE_PAYMENT_REVIEW,
+                'status' => Order::STATE_PAYMENT_REVIEW,
             ];
         }
 
