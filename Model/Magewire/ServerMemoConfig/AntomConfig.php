@@ -26,6 +26,7 @@ class AntomConfig extends AbstractConfigSection
             'sdkEnvironment' => $this->config->getSdkEnvironment(),
             'sdkUrl' => $this->config->getSdkUrl(),
             'createSessionUrl' => 'antom/payment/createsession',
+            'createQuoteSessionUrl' => 'antom/payment/createquotesession',
             'methods' => [
                 ConfigProvider::CODE_CC => [
                     'active' => $this->config->isMethodActive(ConfigProvider::CODE_CC),

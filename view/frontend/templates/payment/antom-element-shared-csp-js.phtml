@@ -24,6 +24,8 @@ use Magento\Framework\View\Element\Template;
         let amsElement = null;
         let sdkLoaded = false;
         let submitting = false;
+        let paymentResolve = null;
+        let paymentReject = null;
 
         function loadSdk() {
             return new Promise((resolve, reject) => {
@@ -57,13 +59,9 @@ use Magento\Framework\View\Element\Template;
             }
         }
 
-        function getCreateSessionUrl() {
+        async function createQuoteSession() {
             const antomConfig = getAntomConfig();
-            return antomConfig.createSessionUrl || 'antom/payment/createsession';
-        }
-
-        async function createPaymentSession(incrementId) {
-            const url = window.BASE_URL + getCreateSessionUrl();
+            const url = window.BASE_URL + (antomConfig.createQuoteSessionUrl || 'antom/payment/createquotesession');
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -72,7 +70,6 @@ use Magento\Framework\View\Element\Template;
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    order_increment_id: incrementId,
                     payment_method_type: SDK_PAYMENT_METHOD_TYPE
                 })
             });
@@ -110,6 +107,44 @@ use Magento\Framework\View\Element\Template;
                     method: {
                         async initialize() {
                             await loadSdk();
+
+                            const sessionResponse = await createQuoteSession();
+
+                            if (!sessionResponse.paymentSessionData) {
+                                throw new Error('Invalid payment session response');
+                            }
+
+                            const antomConfig = getAntomConfig();
+
+                            amsElement = new AMSElement({
+                                environment: antomConfig.sdkEnvironment || 'sandbox',
+                                locale: document.documentElement.lang || 'en_US',
+                                sessionData: sessionResponse.paymentSessionData
+                            });
+
+                            await new Promise((resolve, reject) => {
+                                amsElement.mount({
+                                    paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
+                                    onEventCallback: (event) => {
+                                        if (event.code === 'SDK_RENDER_SUCCESS') {
+                                            resolve();
+                                        } else if (event.code === 'SDK_RENDER_FAIL'
+                                            || event.code === 'SDK_RENDER_ERROR') {
+                                            reject(new Error(event.message || 'Failed to render payment element'));
+                                        } else if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
+                                            paymentResolve && paymentResolve(true);
+                                        } else if (event.code === 'SDK_PAYMENT_FAIL'
+                                            || event.code === 'SDK_PAYMENT_ERROR') {
+                                            submitting = false;
+                                            const msg = event.message || 'Payment failed. Please try again.';
+                                            paymentReject && paymentReject(new Error(msg));
+                                        } else if (event.code === 'SDK_PAYMENT_CANCEL') {
+                                            submitting = false;
+                                            paymentReject && paymentReject(new Error('Payment cancelled'));
+                                        }
+                                    }
+                                }, '#' + CONTAINER_ID);
+                            });
                         },
 
                         async uninitialize() {
@@ -121,63 +156,22 @@ use Magento\Framework\View\Element\Template;
                         },
 
                         async placeOrder({ fallback }) {
-                            if (submitting) return;
+                            if (submitting || !amsElement) return;
                             submitting = true;
 
                             try {
-                                await fallback();
-
-                                const order = hyvaCheckout.main.getWireComponent();
-                                const incrementId = order.get('order_increment_id')
-                                    || hyvaCheckout.storage.getData('order_increment_id')
-                                    || '';
-
-                                if (!incrementId) {
-                                    throw new Error('Order was not created. Please try again.');
-                                }
-
-                                const sessionResponse = await createPaymentSession(incrementId);
-
-                                if (!sessionResponse.paymentSessionData) {
-                                    throw new Error('Invalid payment session response');
-                                }
-
-                                const antomConfig = getAntomConfig();
-
-                                amsElement = new AMSElement({
-                                    environment: antomConfig.sdkEnvironment || 'sandbox',
-                                    locale: document.documentElement.lang || 'en_US',
-                                    sessionData: sessionResponse.paymentSessionData
-                                });
-
-                                return new Promise((resolve, reject) => {
-                                    amsElement.mount({
-                                        paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
-                                        onEventCallback: (event) => {
-                                            if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
-                                                destroySdk();
-                                                window.location.href = window.BASE_URL + 'checkout/onepage/success';
-                                                resolve(true);
-                                            } else if (event.code === 'SDK_PAYMENT_FAIL'
-                                                || event.code === 'SDK_PAYMENT_ERROR') {
-                                                destroySdk();
-                                                submitting = false;
-                                                const msg = event.message || 'Payment failed. Please try again.';
-                                                hyvaCheckout.message.alert(msg);
-                                                reject(new Error(msg));
-                                            } else if (event.code === 'SDK_PAYMENT_CANCEL') {
-                                                destroySdk();
-                                                submitting = false;
-                                                hyvaCheckout.message.warn('Payment was cancelled.');
-                                                reject(new Error('Payment cancelled'));
-                                            }
-                                        }
-                                    }, '#' + CONTAINER_ID);
-
+                                const paymentResult = await new Promise((resolve, reject) => {
+                                    paymentResolve = resolve;
+                                    paymentReject = reject;
                                     amsElement.submitPayment();
                                 });
+
+                                if (paymentResult) {
+                                    await fallback();
+                                    destroySdk();
+                                    window.location.href = window.BASE_URL + 'checkout/onepage/success';
+                                }
                             } catch (error) {
-                                destroySdk();
                                 submitting = false;
                                 throw error;
                             }

@@ -14,4 +14,7 @@ $containerId = 'antom-hosted-container';
 <div id="<?= $escaper->escapeHtmlAttr($containerId) ?>"
      class="antom-payment-container antom-hosted-container"
      x-data="antomHosted">
+    <p class="text-sm text-gray-600">
+        <?= $escaper->escapeHtml(__('You will be redirected to complete your payment after you click Place Order.')) ?>
+    </p>
 </div>

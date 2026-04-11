@@ -9,6 +9,13 @@
         </arguments>
     </type>
 
+    <type name="CaravanGlory\Antom\Controller\Payment\CreateQuoteSession">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
     <type name="CaravanGlory\Antom\Controller\Payment\HostedRedirect">
         <arguments>
             <argument name="commandPool" xsi:type="object">AntomCommandPool</argument>
