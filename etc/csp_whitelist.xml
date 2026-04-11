@@ -18,6 +18,7 @@
             <values>
                 <value id="antom-api" type="host">https://*.marmot-cloud.com</value>
                 <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
+                <value id="antom-alipay-imdap" type="host">https://imdap-sea.alipay.com</value>
             </values>
         </policy>
     </policies>
