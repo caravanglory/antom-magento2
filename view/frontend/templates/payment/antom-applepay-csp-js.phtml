@@ -12,14 +12,10 @@ use Magento\Framework\View\Element\Template;
 ?>
 
 <script>
-    function antomApplePay() {
-        return antomElementPayment({
-            methodCode: '<?= $escaper->escapeJs('antom_applepay') ?>',
-            sdkPaymentMethodType: '<?= $escaper->escapeJs('APPLEPAY') ?>',
-            containerId: '<?= $escaper->escapeJs('antom-applepay-container') ?>'
-        });
-    }
-
-    window.addEventListener('alpine:init', () => Alpine.data('antomApplePay', antomApplePay), { once: true });
+    antomRegisterPaymentMethod({
+        methodCode: '<?= $escaper->escapeJs('antom_applepay') ?>',
+        sdkPaymentMethodType: '<?= $escaper->escapeJs('APPLEPAY') ?>',
+        containerId: '<?= $escaper->escapeJs('antom-applepay-container') ?>'
+    });
 </script>
 <?php $hyvaCsp->registerInlineScript(); ?>

@@ -12,14 +12,10 @@ use Magento\Framework\View\Element\Template;
 ?>
 
 <script>
-    function antomCard() {
-        return antomElementPayment({
-            methodCode: '<?= $escaper->escapeJs('antom_cc') ?>',
-            sdkPaymentMethodType: '<?= $escaper->escapeJs('CARD') ?>',
-            containerId: '<?= $escaper->escapeJs('antom-card-container') ?>'
-        });
-    }
-
-    window.addEventListener('alpine:init', () => Alpine.data('antomCard', antomCard), { once: true });
+    antomRegisterPaymentMethod({
+        methodCode: '<?= $escaper->escapeJs('antom_cc') ?>',
+        sdkPaymentMethodType: '<?= $escaper->escapeJs('CARD') ?>',
+        containerId: '<?= $escaper->escapeJs('antom-card-container') ?>'
+    });
 </script>
 <?php $hyvaCsp->registerInlineScript(); ?>

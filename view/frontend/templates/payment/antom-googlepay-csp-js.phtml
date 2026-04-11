@@ -12,14 +12,10 @@ use Magento\Framework\View\Element\Template;
 ?>
 
 <script>
-    function antomGooglePay() {
-        return antomElementPayment({
-            methodCode: '<?= $escaper->escapeJs('antom_googlepay') ?>',
-            sdkPaymentMethodType: '<?= $escaper->escapeJs('GOOGLEPAY') ?>',
-            containerId: '<?= $escaper->escapeJs('antom-googlepay-container') ?>'
-        });
-    }
-
-    window.addEventListener('alpine:init', () => Alpine.data('antomGooglePay', antomGooglePay), { once: true });
+    antomRegisterPaymentMethod({
+        methodCode: '<?= $escaper->escapeJs('antom_googlepay') ?>',
+        sdkPaymentMethodType: '<?= $escaper->escapeJs('GOOGLEPAY') ?>',
+        containerId: '<?= $escaper->escapeJs('antom-googlepay-container') ?>'
+    });
 </script>
 <?php $hyvaCsp->registerInlineScript(); ?>

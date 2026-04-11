@@ -1,7 +1,8 @@
 <?php
 /**
  * Shared JS factory for Antom Element-based payment methods (Card, Google Pay, Apple Pay).
- * Each method template calls antomElementPayment() with its specific config.
+ * Registers each payment method with Hyvä Checkout immediately at script execution time
+ * to avoid timing issues with Alpine initialization.
  */
 
 declare(strict_types=1);
@@ -16,7 +17,7 @@ use Magento\Framework\View\Element\Template;
 ?>
 
 <script>
-    function antomElementPayment(config) {
+    function antomRegisterPaymentMethod(config) {
         const METHOD_CODE = config.methodCode;
         const SDK_PAYMENT_METHOD_TYPE = config.sdkPaymentMethodType;
         const CONTAINER_ID = config.containerId;
@@ -46,7 +47,7 @@ use Magento\Framework\View\Element\Template;
                     sdkLoaded = true;
                     resolve();
                 });
-                script.addEventListener('error', () => reject(new Error('Failed to load Antom SDK')));
+                script.addEventListener('error', (e) => reject(new Error('unable to load Antom script: ' + sdkUrl)));
                 document.head.appendChild(script);
             });
         }
@@ -93,101 +94,96 @@ use Magento\Framework\View\Element\Template;
             }
         }
 
-        return {
-            loading: false,
-            errorMessage: '',
-
-            init() {
-                if (hyvaCheckout.payment.getByCode(METHOD_CODE)) {
-                    return;
-                }
-
-                hyvaCheckout.payment.registerMethod({
-                    code: METHOD_CODE,
-                    method: {
-                        async initialize() {
-                            await loadSdk();
-
-                            const sessionResponse = await createQuoteSession();
-
-                            if (!sessionResponse.paymentSessionData) {
-                                throw new Error('Invalid payment session response');
-                            }
-
-                            const antomConfig = getAntomConfig();
-
-                            amsElement = new AMSElement({
-                                environment: antomConfig.sdkEnvironment || 'sandbox',
-                                locale: document.documentElement.lang || 'en_US',
-                                sessionData: sessionResponse.paymentSessionData
-                            });
-
-                            await new Promise((resolve, reject) => {
-                                amsElement.mount({
-                                    paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
-                                    onEventCallback: (event) => {
-                                        if (event.code === 'SDK_RENDER_SUCCESS') {
-                                            resolve();
-                                        } else if (event.code === 'SDK_RENDER_FAIL'
-                                            || event.code === 'SDK_RENDER_ERROR') {
-                                            reject(new Error(event.message || 'Failed to render payment element'));
-                                        } else if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
-                                            paymentResolve && paymentResolve(true);
-                                        } else if (event.code === 'SDK_PAYMENT_FAIL'
-                                            || event.code === 'SDK_PAYMENT_ERROR') {
-                                            submitting = false;
-                                            const msg = event.message || 'Payment failed. Please try again.';
-                                            paymentReject && paymentReject(new Error(msg));
-                                        } else if (event.code === 'SDK_PAYMENT_CANCEL') {
-                                            submitting = false;
-                                            paymentReject && paymentReject(new Error('Payment cancelled'));
-                                        }
-                                    }
-                                }, '#' + CONTAINER_ID);
-                            });
-                        },
-
-                        async uninitialize() {
-                            destroySdk();
-                        },
-
-                        async validate() {
-                            return true;
-                        },
-
-                        async placeOrder({ fallback }) {
-                            if (submitting || !amsElement) return;
-                            submitting = true;
-
-                            try {
-                                const paymentResult = await new Promise((resolve, reject) => {
-                                    paymentResolve = resolve;
-                                    paymentReject = reject;
-                                    amsElement.submitPayment();
-                                });
-
-                                if (paymentResult) {
-                                    await fallback();
-                                    destroySdk();
-                                    window.location.href = window.BASE_URL + 'checkout/onepage/success';
-                                }
-                            } catch (error) {
-                                submitting = false;
-                                throw error;
-                            }
-                        },
-
-                        async canRedirect() {
-                            return false;
-                        },
-
-                        async getRedirectUrl() {
-                            return null;
-                        }
-                    }
-                });
+        hyvaCheckout.payment.after(() => {
+            if (hyvaCheckout.payment.getByCode(METHOD_CODE)) {
+                return;
             }
-        };
+
+            hyvaCheckout.payment.registerMethod({
+                code: METHOD_CODE,
+                method: {
+                    async initialize() {
+                        await loadSdk();
+
+                        const sessionResponse = await createQuoteSession();
+
+                        if (!sessionResponse.paymentSessionData) {
+                            throw new Error('Invalid payment session response');
+                        }
+
+                        const antomConfig = getAntomConfig();
+
+                        amsElement = new AMSElement({
+                            environment: antomConfig.sdkEnvironment || 'sandbox',
+                            locale: document.documentElement.lang || 'en_US',
+                            sessionData: sessionResponse.paymentSessionData
+                        });
+
+                        await new Promise((resolve, reject) => {
+                            amsElement.mount({
+                                paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
+                                onEventCallback: (event) => {
+                                    if (event.code === 'SDK_RENDER_SUCCESS') {
+                                        resolve();
+                                    } else if (event.code === 'SDK_RENDER_FAIL'
+                                        || event.code === 'SDK_RENDER_ERROR') {
+                                        reject(new Error(event.message || 'Failed to render payment element'));
+                                    } else if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
+                                        paymentResolve && paymentResolve(true);
+                                    } else if (event.code === 'SDK_PAYMENT_FAIL'
+                                        || event.code === 'SDK_PAYMENT_ERROR') {
+                                        submitting = false;
+                                        const msg = event.message || 'Payment failed. Please try again.';
+                                        paymentReject && paymentReject(new Error(msg));
+                                    } else if (event.code === 'SDK_PAYMENT_CANCEL') {
+                                        submitting = false;
+                                        paymentReject && paymentReject(new Error('Payment cancelled'));
+                                    }
+                                }
+                            }, '#' + CONTAINER_ID);
+                        });
+                    },
+
+                    async uninitialize() {
+                        destroySdk();
+                    },
+
+                    async validate() {
+                        return true;
+                    },
+
+                    async placeOrder({ fallback }) {
+                        if (submitting || !amsElement) return;
+                        submitting = true;
+
+                        try {
+                            const paymentResult = await new Promise((resolve, reject) => {
+                                paymentResolve = resolve;
+                                paymentReject = reject;
+                                amsElement.submitPayment();
+                            });
+
+                            if (paymentResult) {
+                                await fallback();
+                                destroySdk();
+                                window.location.href = window.BASE_URL + 'checkout/onepage/success';
+                            }
+                        } catch (error) {
+                            submitting = false;
+                            throw error;
+                        }
+                    },
+
+                    async canRedirect() {
+                        return false;
+                    },
+
+                    async getRedirectUrl() {
+                        return null;
+                    }
+                }
+            });
+        });
     }
 </script>
 <?php $hyvaCsp->registerInlineScript(); ?>
