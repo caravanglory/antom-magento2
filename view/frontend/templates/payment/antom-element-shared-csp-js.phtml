@@ -1,8 +1,10 @@
 <?php
 /**
- * Shared JS factory for Antom Element-based payment methods (Card, Google Pay, Apple Pay).
+ * Shared JS factory for Antom payment methods (Card, Google Pay, Apple Pay).
  * Registers each payment method with Hyvä Checkout via the payment API priority queue,
  * ensuring methods are registered before activation events fire.
+ *
+ * Uses AMSCashierPayment from the Antom Web SDK with mountComponent() API.
  *
  * This script MUST be placed in the hyva.checkout.api-v1.payment-methods container
  * (rendered inside api/v1.phtml) to guarantee correct timing.
@@ -25,7 +27,7 @@ use Magento\Framework\View\Element\Template;
         const SDK_PAYMENT_METHOD_TYPE = config.sdkPaymentMethodType;
         const CONTAINER_ID = config.containerId;
 
-        let amsElement = null;
+        let cashierPayment = null;
         let sdkLoaded = false;
         let submitting = false;
         let paymentResolve = null;
@@ -33,7 +35,7 @@ use Magento\Framework\View\Element\Template;
 
         function loadSdk() {
             return new Promise((resolve, reject) => {
-                if (sdkLoaded || window.AMSElement) {
+                if (sdkLoaded || window.AMSCashierPayment) {
                     sdkLoaded = true;
                     resolve();
                     return;
@@ -86,14 +88,26 @@ use Magento\Framework\View\Element\Template;
             return response.json();
         }
 
+        function handleEventCallback(eventCode) {
+            if (eventCode === 'SDK_PAYMENT_SUCCESSFUL') {
+                paymentResolve && paymentResolve(true);
+            } else if (eventCode === 'SDK_PAYMENT_FAIL' || eventCode === 'SDK_PAYMENT_ERROR') {
+                submitting = false;
+                paymentReject && paymentReject(new Error('Payment failed. Please try again.'));
+            } else if (eventCode === 'SDK_PAYMENT_CANCEL') {
+                submitting = false;
+                paymentReject && paymentReject(new Error('Payment cancelled'));
+            }
+        }
+
         function destroySdk() {
-            if (amsElement) {
+            if (cashierPayment) {
                 try {
-                    amsElement.destroy();
+                    cashierPayment.unmount();
                 } catch (e) {
-                    // SDK already destroyed or not mounted
+                    // SDK already unmounted
                 }
-                amsElement = null;
+                cashierPayment = null;
             }
         }
 
@@ -116,35 +130,22 @@ use Magento\Framework\View\Element\Template;
 
                         const antomConfig = getAntomConfig();
 
-                        amsElement = new AMSElement({
+                        cashierPayment = new AMSCashierPayment({
                             environment: antomConfig.sdkEnvironment || 'sandbox',
                             locale: document.documentElement.lang || 'en_US',
-                            sessionData: sessionResponse.paymentSessionData
+                            analytics: {
+                                enabled: false
+                            },
+                            onEventCallback: handleEventCallback
                         });
 
-                        await new Promise((resolve, reject) => {
-                            amsElement.mount({
-                                paymentMethodType: SDK_PAYMENT_METHOD_TYPE,
-                                onEventCallback: (event) => {
-                                    if (event.code === 'SDK_RENDER_SUCCESS') {
-                                        resolve();
-                                    } else if (event.code === 'SDK_RENDER_FAIL'
-                                        || event.code === 'SDK_RENDER_ERROR') {
-                                        reject(new Error(event.message || 'Failed to render payment element'));
-                                    } else if (event.code === 'SDK_PAYMENT_SUCCESSFUL') {
-                                        paymentResolve && paymentResolve(true);
-                                    } else if (event.code === 'SDK_PAYMENT_FAIL'
-                                        || event.code === 'SDK_PAYMENT_ERROR') {
-                                        submitting = false;
-                                        const msg = event.message || 'Payment failed. Please try again.';
-                                        paymentReject && paymentReject(new Error(msg));
-                                    } else if (event.code === 'SDK_PAYMENT_CANCEL') {
-                                        submitting = false;
-                                        paymentReject && paymentReject(new Error('Payment cancelled'));
-                                    }
-                                }
-                            }, '#' + CONTAINER_ID);
-                        });
+                        await cashierPayment.mountComponent({
+                            sessionData: sessionResponse.paymentSessionData,
+                            appearance: {
+                                showSubmitButton: false
+                            },
+                            notRedirectAfterComplete: true
+                        }, '#' + CONTAINER_ID);
                     },
 
                     async uninitialize() {
@@ -156,14 +157,14 @@ use Magento\Framework\View\Element\Template;
                     },
 
                     async placeOrder({ fallback }) {
-                        if (submitting || !amsElement) return;
+                        if (submitting || !cashierPayment) return;
                         submitting = true;
 
                         try {
                             const paymentResult = await new Promise((resolve, reject) => {
                                 paymentResolve = resolve;
                                 paymentReject = reject;
-                                amsElement.submitPayment();
+                                cashierPayment.submit();
                             });
 
                             if (paymentResult) {
