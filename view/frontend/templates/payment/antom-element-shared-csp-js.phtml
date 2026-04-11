@@ -1,8 +1,11 @@
 <?php
 /**
  * Shared JS factory for Antom Element-based payment methods (Card, Google Pay, Apple Pay).
- * Registers each payment method with Hyvä Checkout immediately at script execution time
- * to avoid timing issues with Alpine initialization.
+ * Registers each payment method with Hyvä Checkout via the payment API priority queue,
+ * ensuring methods are registered before activation events fire.
+ *
+ * This script MUST be placed in the hyva.checkout.api-v1.payment-methods container
+ * (rendered inside api/v1.phtml) to guarantee correct timing.
  */
 
 declare(strict_types=1);
@@ -47,7 +50,7 @@ use Magento\Framework\View\Element\Template;
                     sdkLoaded = true;
                     resolve();
                 });
-                script.addEventListener('error', (e) => reject(new Error('unable to load Antom script: ' + sdkUrl)));
+                script.addEventListener('error', () => reject(new Error('Failed to load Antom SDK from: ' + sdkUrl)));
                 document.head.appendChild(script);
             });
         }

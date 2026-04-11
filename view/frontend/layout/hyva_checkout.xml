@@ -5,16 +5,20 @@
         <css src="CaravanGlory_Antom::css/antom.css"/>
     </head>
     <body>
-        <referenceContainer name="magewire.plugin.scripts">
+        <referenceContainer name="hyva.checkout.api-v1.payment-methods">
             <block name="antom.element.shared.csp.js"
                    template="CaravanGlory_Antom::payment/antom-element-shared-csp-js.phtml"/>
             <block name="antom.card.csp.js"
+                   after="antom.element.shared.csp.js"
                    template="CaravanGlory_Antom::payment/antom-card-csp-js.phtml"/>
             <block name="antom.googlepay.csp.js"
+                   after="antom.element.shared.csp.js"
                    template="CaravanGlory_Antom::payment/antom-googlepay-csp-js.phtml"/>
             <block name="antom.applepay.csp.js"
+                   after="antom.element.shared.csp.js"
                    template="CaravanGlory_Antom::payment/antom-applepay-csp-js.phtml"/>
             <block name="antom.hosted.csp.js"
+                   after="antom.element.shared.csp.js"
                    template="CaravanGlory_Antom::payment/antom-hosted-csp-js.phtml"/>
         </referenceContainer>
     </body>

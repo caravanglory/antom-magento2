@@ -14,48 +14,44 @@ $methodCode = 'antom_hosted';
 ?>
 
 <script>
-    function antomHosted() {
+    (function() {
         const METHOD_CODE = '<?= $escaper->escapeJs($methodCode) ?>';
 
-        return {
-            init() {
-                if (hyvaCheckout.payment.getByCode(METHOD_CODE)) {
-                    return;
-                }
-
-                hyvaCheckout.payment.registerMethod({
-                    code: METHOD_CODE,
-                    method: {
-                        async initialize() {
-                            // No SDK to load for hosted payment
-                        },
-
-                        async uninitialize() {
-                            // No cleanup needed
-                        },
-
-                        async validate() {
-                            return true;
-                        },
-
-                        async placeOrder({ fallback }) {
-                            await fallback();
-                        },
-
-                        async canRedirect() {
-                            return true;
-                        },
-
-                        async getRedirectUrl() {
-                            // Redirect URL is provided by AntomHostedPlaceOrderService
-                            return null;
-                        }
-                    }
-                });
+        hyvaCheckout.payment.after(() => {
+            if (hyvaCheckout.payment.getByCode(METHOD_CODE)) {
+                return;
             }
-        };
-    }
 
-    window.addEventListener('alpine:init', () => Alpine.data('antomHosted', antomHosted), { once: true });
+            hyvaCheckout.payment.registerMethod({
+                code: METHOD_CODE,
+                method: {
+                    async initialize() {
+                        // No SDK to load for hosted payment
+                    },
+
+                    async uninitialize() {
+                        // No cleanup needed
+                    },
+
+                    async validate() {
+                        return true;
+                    },
+
+                    async placeOrder({ fallback }) {
+                        await fallback();
+                    },
+
+                    async canRedirect() {
+                        return true;
+                    },
+
+                    async getRedirectUrl() {
+                        // Redirect URL is provided by AntomHostedPlaceOrderService
+                        return null;
+                    }
+                }
+            });
+        });
+    })();
 </script>
 <?php $hyvaCsp->registerInlineScript(); ?>
