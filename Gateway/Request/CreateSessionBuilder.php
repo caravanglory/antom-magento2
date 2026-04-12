@@ -6,8 +6,10 @@ namespace CaravanGlory\Antom\Gateway\Request;
 
 use CaravanGlory\Antom\Gateway\AmountConverter;
 use CaravanGlory\Antom\Gateway\Config;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Model\Amount;
 use Model\Env;
@@ -21,13 +23,16 @@ class CreateSessionBuilder implements BuilderInterface
 {
     private Config $config;
     private StoreManagerInterface $storeManager;
+    private ScopeConfigInterface $scopeConfig;
 
     public function __construct(
         Config $config,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->config = $config;
         $this->storeManager = $storeManager;
+        $this->scopeConfig = $scopeConfig;
     }
 
     public function build(array $buildSubject): array
@@ -73,6 +78,15 @@ class CreateSessionBuilder implements BuilderInterface
         $request->setPaymentFactor($paymentFactor);
         $request->setPaymentNotifyUrl($notifyUrl);
         $request->setPaymentRedirectUrl($redirectUrl);
+
+        $merchantRegion = (string)$this->scopeConfig->getValue(
+            'general/country/default',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+        if ($merchantRegion !== '') {
+            $request->setMerchantRegion($merchantRegion);
+        }
 
         $env = new Env();
         $env->setTerminalType('WEB');
