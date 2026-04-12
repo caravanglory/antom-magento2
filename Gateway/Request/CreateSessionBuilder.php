@@ -17,6 +17,7 @@ use Model\Order as AntomOrder;
 use Model\PaymentFactor;
 use Model\PaymentMethod;
 use Model\ProductCodeType;
+use Model\SettlementStrategy;
 use Request\pay\AlipayPaymentSessionRequest;
 
 class CreateSessionBuilder implements BuilderInterface
@@ -87,6 +88,10 @@ class CreateSessionBuilder implements BuilderInterface
         if ($merchantRegion !== '') {
             $request->setMerchantRegion($merchantRegion);
         }
+
+        $settlementStrategy = new SettlementStrategy();
+        $settlementStrategy->setSettlementCurrency($currencyCode);
+        $request->setSettlementStrategy($settlementStrategy);
 
         $env = new Env();
         $env->setTerminalType('WEB');
