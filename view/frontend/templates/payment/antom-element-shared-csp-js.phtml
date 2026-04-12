@@ -28,7 +28,7 @@ use Magento\Framework\View\Element\Template;
         const SDK_PAYMENT_METHOD_TYPE = config.sdkPaymentMethodType;
         const CONTAINER_ID = config.containerId;
 
-        let cashierPayment = null;
+        let elementInstance = null;
         let sdkLoaded = false;
         let submitting = false;
         let paymentResolve = null;
@@ -36,7 +36,7 @@ use Magento\Framework\View\Element\Template;
 
         function loadSdk() {
             return new Promise((resolve, reject) => {
-                if (sdkLoaded || window.AMSCashierPayment) {
+                if (sdkLoaded || window.AMSElement) {
                     sdkLoaded = true;
                     resolve();
                     return;
@@ -102,13 +102,13 @@ use Magento\Framework\View\Element\Template;
         }
 
         function destroySdk() {
-            if (cashierPayment) {
+            if (elementInstance) {
                 try {
-                    cashierPayment.unmount();
+                    elementInstance.unmount();
                 } catch (e) {
                     // SDK already unmounted
                 }
-                cashierPayment = null;
+                elementInstance = null;
             }
         }
 
@@ -131,22 +131,21 @@ use Magento\Framework\View\Element\Template;
 
                         const antomConfig = getAntomConfig();
 
-                        cashierPayment = new AMSCashierPayment({
+                        elementInstance = new AMSElement({
+                            sessionData: sessionResponse.paymentSessionData,
                             environment: antomConfig.sdkEnvironment || 'sandbox',
                             locale: document.documentElement.lang || 'en_US',
+                            appearance: {
+                                showSubmitButton: false
+                            },
+                            notRedirectAfterComplete: true,
                             analytics: {
                                 enabled: false
                             },
                             onEventCallback: handleEventCallback
                         });
 
-                        await cashierPayment.createComponent({
-                            sessionData: sessionResponse.paymentSessionData,
-                            appearance: {
-                                showSubmitButton: false
-                            },
-                            notRedirectAfterComplete: true
-                        }, '#' + CONTAINER_ID);
+                        await elementInstance.mount({}, '#' + CONTAINER_ID);
                     },
 
                     async uninitialize() {
@@ -158,14 +157,14 @@ use Magento\Framework\View\Element\Template;
                     },
 
                     async placeOrder({ fallback }) {
-                        if (submitting || !cashierPayment) return;
+                        if (submitting || !elementInstance) return;
                         submitting = true;
 
                         try {
                             const paymentResult = await new Promise((resolve, reject) => {
                                 paymentResolve = resolve;
                                 paymentReject = reject;
-                                cashierPayment.submit();
+                                elementInstance.submitPayment();
                             });
 
                             if (paymentResult) {
