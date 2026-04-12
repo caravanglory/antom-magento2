@@ -145,7 +145,7 @@ use Magento\Framework\View\Element\Template;
                             onEventCallback: handleEventCallback
                         });
 
-                        await elementInstance.mount({}, '#' + CONTAINER_ID);
+                        await elementInstance.mount({ type: 'payment' }, '#' + CONTAINER_ID);
                     },
 
                     async uninitialize() {
