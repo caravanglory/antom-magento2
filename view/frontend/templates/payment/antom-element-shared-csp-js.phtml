@@ -4,7 +4,8 @@
  * Registers each payment method with Hyvä Checkout via the payment API priority queue,
  * ensuring methods are registered before activation events fire.
  *
- * Uses AMSCashierPayment from the Antom Web SDK with mountComponent() API.
+ * Uses AMSCashierPayment from the Antom Web SDK with createComponent() API
+ * (the Element Integration entry point for productScene=ELEMENT_PAYMENT).
  *
  * This script MUST be placed in the hyva.checkout.api-v1.payment-methods container
  * (rendered inside api/v1.phtml) to guarantee correct timing.
@@ -139,7 +140,7 @@ use Magento\Framework\View\Element\Template;
                             onEventCallback: handleEventCallback
                         });
 
-                        await cashierPayment.mountComponent({
+                        await cashierPayment.createComponent({
                             sessionData: sessionResponse.paymentSessionData,
                             appearance: {
                                 showSubmitButton: false
