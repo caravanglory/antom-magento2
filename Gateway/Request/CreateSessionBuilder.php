@@ -63,6 +63,9 @@ class CreateSessionBuilder implements BuilderInterface
 
         $paymentFactor = new PaymentFactor();
         $paymentFactor->setCaptureMode($this->config->getCaptureMode($payment->getMethod(), $storeId));
+        if ($paymentMethodType === 'CARD') {
+            $paymentFactor->setIsAuthorization(true);
+        }
 
         $baseUrl = $this->storeManager->getStore($storeId)->getBaseUrl();
         $notifyUrl = rtrim($baseUrl, '/') . '/antom/notification';
