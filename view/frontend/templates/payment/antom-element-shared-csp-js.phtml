@@ -31,6 +31,8 @@ use Magento\Framework\View\Element\Template;
         let elementInstance = null;
         let sdkLoaded = false;
         let submitting = false;
+        let initializePromise = null;
+        let refreshHookRegistered = false;
 
         function loadSdk() {
             return new Promise((resolve, reject) => {
@@ -92,6 +94,26 @@ use Magento\Framework\View\Element\Template;
             // SDK compatibility, but do not depend on legacy event codes here.
         }
 
+        function getContainer() {
+            return document.getElementById(CONTAINER_ID);
+        }
+
+        function hasMountedElement() {
+            const container = getContainer();
+
+            return !!container && container.childElementCount > 0;
+        }
+
+        function isMethodSelected() {
+            if (hyvaCheckout.config.getValue('payment.method') === METHOD_CODE) {
+                return true;
+            }
+
+            const radio = document.getElementById('payment-method-' + METHOD_CODE);
+
+            return !!radio && radio.checked;
+        }
+
         function destroySdk() {
             if (elementInstance) {
                 try {
@@ -103,7 +125,90 @@ use Magento\Framework\View\Element\Template;
             }
         }
 
+        async function initializeElement() {
+            if (initializePromise) {
+                return initializePromise;
+            }
+
+            if (hasMountedElement()) {
+                return;
+            }
+
+            initializePromise = (async () => {
+                await loadSdk();
+                destroySdk();
+
+                const sessionResponse = await createQuoteSession();
+
+                if (!sessionResponse.paymentSessionData) {
+                    throw new Error('Invalid payment session response');
+                }
+
+                const antomConfig = getAntomConfig();
+
+                elementInstance = new AMSElement({
+                    sessionData: sessionResponse.paymentSessionData,
+                    environment: antomConfig.sdkEnvironment || 'sandbox',
+                    locale: document.documentElement.lang || 'en_US',
+                    appearance: {
+                        showSubmitButton: false
+                    },
+                    notRedirectAfterComplete: true,
+                    analytics: {
+                        enabled: false
+                    },
+                    onEventCallback: handleEventCallback
+                });
+
+                await elementInstance.mount({ type: 'payment' }, '#' + CONTAINER_ID);
+            })().finally(() => {
+                initializePromise = null;
+            });
+
+            return initializePromise;
+        }
+
+        function registerRefreshHook() {
+            if (refreshHookRegistered) {
+                return;
+            }
+
+            const attachHook = () => {
+                if (!window.Magewire || typeof window.Magewire.hook !== 'function') {
+                    return false;
+                }
+
+                refreshHookRegistered = true;
+
+                window.Magewire.hook('message.processed', (message, component) => {
+                    if (!component || component.id !== 'checkout.payment.methods') {
+                        return;
+                    }
+
+                    // Magewire can redraw the payment method markup without re-firing
+                    // Hyva's payment activation event for the already-selected method.
+                    window.requestAnimationFrame(() => {
+                        if (!isMethodSelected() || hasMountedElement()) {
+                            return;
+                        }
+
+                        initializeElement().catch((error) => {
+                            console.error('Failed to remount Antom payment element', error);
+                        });
+                    });
+                });
+
+                return true;
+            };
+
+            if (!attachHook()) {
+                document.addEventListener('magewire:available', attachHook, { once: true });
+            }
+        }
+
         hyvaCheckout.payment.after(() => {
+            registerRefreshHook();
+
             if (hyvaCheckout.payment.getByCode(METHOD_CODE)) {
                 return;
             }
@@ -112,31 +217,7 @@ use Magento\Framework\View\Element\Template;
                 code: METHOD_CODE,
                 method: {
                     async initialize() {
-                        await loadSdk();
-
-                        const sessionResponse = await createQuoteSession();
-
-                        if (!sessionResponse.paymentSessionData) {
-                            throw new Error('Invalid payment session response');
-                        }
-
-                        const antomConfig = getAntomConfig();
-
-                        elementInstance = new AMSElement({
-                            sessionData: sessionResponse.paymentSessionData,
-                            environment: antomConfig.sdkEnvironment || 'sandbox',
-                            locale: document.documentElement.lang || 'en_US',
-                            appearance: {
-                                showSubmitButton: false
-                            },
-                            notRedirectAfterComplete: true,
-                            analytics: {
-                                enabled: false
-                            },
-                            onEventCallback: handleEventCallback
-                        });
-
-                        await elementInstance.mount({ type: 'payment' }, '#' + CONTAINER_ID);
+                        await initializeElement();
                     },
 
                     async uninitialize() {
