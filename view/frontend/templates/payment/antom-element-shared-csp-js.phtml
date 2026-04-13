@@ -154,9 +154,11 @@ use Magento\Framework\View\Element\Template;
                 orderStatus = await waitForOrderStatus();
             } catch (error) {
                 if (fallbackError) {
+                    fallbackError.antomRecoveryAttempted = true;
                     throw fallbackError;
                 }
 
+                error.antomRecoveryAttempted = true;
                 throw error;
             }
 
@@ -166,25 +168,32 @@ use Magento\Framework\View\Element\Template;
             }
 
             if (orderStatus?.status === 'processing') {
-                throw new Error(
+                const processingError = new Error(
                     orderStatus.message
                     || 'Payment is still processing. Please wait a moment and check the order status again.'
                 );
+                processingError.antomRecoveryAttempted = true;
+                throw processingError;
             }
 
             if (orderStatus?.status === 'failed') {
-                throw new Error(
+                const failedError = new Error(
                     orderStatus.message
                     || getErrorMessage(fallbackError)
                     || 'Payment failed. Please try again.'
                 );
+                failedError.antomRecoveryAttempted = true;
+                throw failedError;
             }
 
             if (fallbackError) {
+                fallbackError.antomRecoveryAttempted = true;
                 throw fallbackError;
             }
 
-            throw new Error(orderStatus?.message || 'Payment did not complete. Please try again.');
+            const unknownError = new Error(orderStatus?.message || 'Payment did not complete. Please try again.');
+            unknownError.antomRecoveryAttempted = true;
+            throw unknownError;
         }
 
         function handleEventCallback() {
@@ -361,6 +370,10 @@ use Magento\Framework\View\Element\Template;
                             );
                             return;
                         } catch (error) {
+                            if (error?.antomRecoveryAttempted) {
+                                throw error;
+                            }
+
                             await recoverPendingOrder(error);
                             return;
                         } finally {
