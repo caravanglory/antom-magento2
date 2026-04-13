@@ -28,6 +28,7 @@ class AntomConfig extends AbstractConfigSection
             'createSessionUrl' => 'antom/payment/createsession',
             'createQuoteSessionUrl' => 'antom/payment/createquotesession',
             'orderStatusUrl' => 'antom/payment/orderstatus',
+            'processingUrl' => 'antom/payment/processing',
             'methods' => [
                 ConfigProvider::CODE_CC => [
                     'active' => $this->config->isMethodActive(ConfigProvider::CODE_CC),

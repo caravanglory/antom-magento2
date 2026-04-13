@@ -1,0 +1,195 @@
+<?php
+/**
+ * Antom payment processing page shown after the checkout order has been placed
+ * but the gateway still reports an indeterminate status.
+ */
+
+declare(strict_types=1);
+
+use CaravanGlory\Antom\Block\Payment\Processing;
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Magento\Framework\Escaper;
+
+/** @var Processing $block */
+/** @var Escaper $escaper */
+/** @var HyvaCsp $hyvaCsp */
+
+$orderIncrementId = $block->getOrderIncrementId();
+$customerEmail = $block->getCustomerEmail();
+?>
+
+<div id="antom-payment-processing"
+     class="mx-auto max-w-3xl px-6 py-16 text-center"
+     data-order-status-url="<?= $escaper->escapeUrl($block->getOrderStatusUrl()) ?>"
+     data-success-url="<?= $escaper->escapeUrl($block->getSuccessUrl()) ?>">
+    <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+        <svg class="h-7 w-7 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.2" stroke-width="4"></circle>
+            <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path>
+        </svg>
+    </div>
+
+    <h1 class="mb-4 text-3xl font-semibold text-gray-900">Confirming your payment</h1>
+
+    <p class="mx-auto mb-3 max-w-2xl text-base text-gray-700">
+        Your order has been created, and Antom is still finalizing the payment result.
+        Please do not place another order while we confirm the status.
+    </p>
+
+    <?php if ($orderIncrementId !== ''): ?>
+        <p class="mb-2 text-sm text-gray-600">
+            Order number: <span class="font-medium text-gray-900"><?= $escaper->escapeHtml($orderIncrementId) ?></span>
+        </p>
+    <?php endif; ?>
+
+    <?php if ($customerEmail !== ''): ?>
+        <p class="mb-8 text-sm text-gray-600">
+            We will send updates to <?= $escaper->escapeHtml($customerEmail) ?>.
+        </p>
+    <?php endif; ?>
+
+    <div class="mx-auto max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <p class="text-sm font-medium uppercase tracking-[0.2em] text-gray-500">Payment Status</p>
+        <p data-role="status-message" class="mt-3 text-lg text-gray-900">
+            Checking payment status...
+        </p>
+        <p data-role="status-detail" class="mt-3 text-sm text-gray-600">
+            This page updates automatically.
+        </p>
+
+        <div class="mt-6 flex items-center justify-center gap-3">
+            <button type="button"
+                    data-role="retry"
+                    class="hidden rounded-full bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800">
+                Check Again
+            </button>
+
+            <a href="<?= $escaper->escapeUrl($block->getContinueShoppingUrl()) ?>"
+               class="rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:border-gray-400 hover:text-gray-900">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const root = document.getElementById('antom-payment-processing');
+
+        if (!root) {
+            return;
+        }
+
+        const statusUrl = root.dataset.orderStatusUrl;
+        const successUrl = root.dataset.successUrl;
+        const statusMessage = root.querySelector('[data-role="status-message"]');
+        const statusDetail = root.querySelector('[data-role="status-detail"]');
+        const retryButton = root.querySelector('[data-role="retry"]');
+        const pollIntervalMs = 3000;
+        const maxAttempts = 20;
+
+        let attempts = 0;
+        let polling = false;
+
+        function setMessage(message, detail) {
+            statusMessage.textContent = message;
+            statusDetail.textContent = detail;
+        }
+
+        function showRetryButton(show) {
+            retryButton.classList.toggle('hidden', !show);
+        }
+
+        async function queryOrderStatus() {
+            const response = await fetch(statusUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'include',
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Unable to determine payment status right now.');
+            }
+
+            return data;
+        }
+
+        async function pollOrderStatus(resetAttempts = false) {
+            if (polling) {
+                return;
+            }
+
+            if (resetAttempts) {
+                attempts = 0;
+            }
+
+            polling = true;
+            showRetryButton(false);
+
+            try {
+                attempts += 1;
+                const result = await queryOrderStatus();
+
+                if (result.status === 'success') {
+                    setMessage('Payment confirmed.', 'Redirecting to your order confirmation page...');
+                    window.location.href = successUrl;
+                    return;
+                }
+
+                if (result.status === 'failed') {
+                    setMessage(
+                        'Payment could not be confirmed.',
+                        result.message || 'Please contact support if you are unsure whether your payment completed.'
+                    );
+                    showRetryButton(true);
+                    return;
+                }
+
+                if (result.status === 'processing') {
+                    setMessage(
+                        'Payment is still processing.',
+                        result.message || 'We are still waiting for Antom to finalize the payment status.'
+                    );
+
+                    if (attempts < maxAttempts) {
+                        window.setTimeout(() => {
+                            polling = false;
+                            pollOrderStatus(false);
+                        }, pollIntervalMs);
+                        return;
+                    }
+
+                    setMessage(
+                        'Payment is still processing.',
+                        'We are still waiting for Antom to finalize the payment. You can stay on this page or check again shortly.'
+                    );
+                    showRetryButton(true);
+                    return;
+                }
+
+                throw new Error(result.message || 'Unable to determine payment status right now.');
+            } catch (error) {
+                setMessage(
+                    'We could not confirm the payment yet.',
+                    error?.message || 'Please try checking the payment status again.'
+                );
+                showRetryButton(true);
+            } finally {
+                polling = false;
+            }
+        }
+
+        retryButton.addEventListener('click', function () {
+            pollOrderStatus(true);
+        });
+
+        pollOrderStatus(false);
+    })();
+</script>
+<?php $hyvaCsp->registerInlineScript(); ?>

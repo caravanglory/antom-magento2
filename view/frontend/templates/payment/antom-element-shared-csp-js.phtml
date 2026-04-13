@@ -147,6 +147,13 @@ use Magento\Framework\View\Element\Template;
             window.location.href = window.BASE_URL + 'checkout/onepage/success';
         }
 
+        function redirectToProcessing() {
+            const antomConfig = getAntomConfig();
+
+            destroySdk();
+            window.location.href = window.BASE_URL + (antomConfig.processingUrl || 'antom/payment/processing');
+        }
+
         async function recoverPendingOrder(fallbackError) {
             let orderStatus;
 
@@ -168,12 +175,8 @@ use Magento\Framework\View\Element\Template;
             }
 
             if (orderStatus?.status === 'processing') {
-                const processingError = new Error(
-                    orderStatus.message
-                    || 'Payment is still processing. Please wait a moment and check the order status again.'
-                );
-                processingError.antomRecoveryAttempted = true;
-                throw processingError;
+                redirectToProcessing();
+                return true;
             }
 
             if (orderStatus?.status === 'failed') {
