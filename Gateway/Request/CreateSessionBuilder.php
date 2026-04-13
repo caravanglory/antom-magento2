@@ -93,7 +93,7 @@ class CreateSessionBuilder implements BuilderInterface
         }
 
         $settlementStrategy = new SettlementStrategy();
-        $settlementStrategy->setSettlementCurrency(null);
+        $settlementStrategy->setSettlementCurrency($this->config->getSettlementCurrency($storeId));
         $request->setSettlementStrategy($settlementStrategy);
 
         $env = new Env();

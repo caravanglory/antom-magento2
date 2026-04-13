@@ -83,6 +83,16 @@ class Config
         );
     }
 
+    public function getSettlementCurrency(?int $storeId = null): ?string
+    {
+        $value = trim((string)$this->scopeConfig->getValue(
+            self::XML_PATH_PREFIX . 'settlement_currency',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        ));
+        return $value === '' ? null : strtoupper($value);
+    }
+
     // ---------------------------------------------------------------
     // Per-method config (payment/{methodCode}/*)
     // ---------------------------------------------------------------
