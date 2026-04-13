@@ -31,8 +31,6 @@ use Magento\Framework\View\Element\Template;
         let elementInstance = null;
         let sdkLoaded = false;
         let submitting = false;
-        let paymentResolve = null;
-        let paymentReject = null;
 
         function loadSdk() {
             return new Promise((resolve, reject) => {
@@ -89,16 +87,9 @@ use Magento\Framework\View\Element\Template;
             return response.json();
         }
 
-        function handleEventCallback(eventCode) {
-            if (eventCode === 'SDK_PAYMENT_SUCCESSFUL') {
-                paymentResolve && paymentResolve(true);
-            } else if (eventCode === 'SDK_PAYMENT_FAIL' || eventCode === 'SDK_PAYMENT_ERROR') {
-                submitting = false;
-                paymentReject && paymentReject(new Error('Payment failed. Please try again.'));
-            } else if (eventCode === 'SDK_PAYMENT_CANCEL') {
-                submitting = false;
-                paymentReject && paymentReject(new Error('Payment cancelled'));
-            }
+        function handleEventCallback() {
+            // AMSElement resolves submitPayment() directly. Keep the callback wired for
+            // SDK compatibility, but do not depend on legacy event codes here.
         }
 
         function destroySdk() {
@@ -161,34 +152,30 @@ use Magento\Framework\View\Element\Template;
                         submitting = true;
 
                         try {
-                            let fallbackError = null;
-                            const fallbackPromise = Promise.resolve()
-                                .then(() => fallback())
-                                .catch((error) => {
-                                    fallbackError = error;
-                                    return null;
-                                });
+                            // Antom resolves submitPayment() with the payment result. The
+                            // Magento order must exist before submission so Antom can look
+                            // up the reference order during payment processing.
+                            await fallback();
 
-                            // Start Magento order creation immediately so the Antom
-                            // reference order exists while payment is processing, but
-                            // do not await the Magewire round-trip before submitting the
-                            // mounted SDK element.
-                            const paymentResult = await new Promise((resolve, reject) => {
-                                paymentResolve = resolve;
-                                paymentReject = reject;
-                                elementInstance.submitPayment();
-                            });
+                            const paymentResult = await elementInstance.submitPayment();
+                            const paymentStatus = paymentResult?.status;
 
-                            await fallbackPromise;
-
-                            if (fallbackError) {
-                                throw fallbackError;
-                            }
-
-                            if (paymentResult) {
+                            if (paymentStatus === 'SUCCESS') {
                                 destroySdk();
                                 window.location.href = window.BASE_URL + 'checkout/onepage/success';
+                                return;
                             }
+
+                            const errorMessage = paymentResult?.error?.message;
+                            if (paymentStatus === 'FAIL' || paymentStatus === 'ERROR') {
+                                throw new Error(errorMessage || 'Payment failed. Please try again.');
+                            }
+
+                            if (paymentStatus === 'CANCEL') {
+                                throw new Error(errorMessage || 'Payment cancelled');
+                            }
+
+                            throw new Error(errorMessage || 'Payment did not complete. Please try again.');
                         } catch (error) {
                             submitting = false;
                             throw error;
