@@ -11,7 +11,7 @@ use Magento\Store\Model\ScopeInterface;
 class Config
 {
     private const XML_PATH_PREFIX = 'payment/antom/';
-    private const SDK_URL = 'https://sdk.marmot-cloud.com/package/ams-checkout/1.46.0/dist/umd/ams-checkout.min.js';
+    private const SDK_URL = 'https://js.antom.com/v2/ams-checkout.js';
 
     private ScopeConfigInterface $scopeConfig;
     private EncryptorInterface $encryptor;

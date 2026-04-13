@@ -4,14 +4,13 @@
     <policies>
         <policy id="script-src">
             <values>
-                <value id="antom-sdk" type="host">https://sdk.marmot-cloud.com</value>
+                <value id="antom-sdk" type="host">*.antom.com</value>
                 <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
                 <value id="alipay-sdk" type="host">*.alipay.com</value>
             </values>
         </policy>
         <policy id="frame-src">
             <values>
-                <value id="antom-sdk-frame" type="host">https://sdk.marmot-cloud.com</value>
                 <value id="google-pay-frame" type="host">https://pay.google.com</value>
                 <value id="alipay-frame" type="host">*.alipay.com</value>
                 <value id="antom-frame" type="host">*.antom.com</value>
@@ -19,7 +18,7 @@
         </policy>
         <policy id="connect-src">
             <values>
-                <value id="antom-api" type="host">https://*.marmot-cloud.com</value>
+                <value id="antom-api" type="host">*.antom.com</value>
                 <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
                 <value id="alipay-api" type="host">*.alipay.com</value>
             </values>
