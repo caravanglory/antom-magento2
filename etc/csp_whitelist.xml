@@ -5,7 +5,8 @@
         <policy id="script-src">
             <values>
                 <value id="antom-sdk" type="host">*.antom.com</value>
-                <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
+                <value id="antom-alipay-tracker" type="host">*.alipayobjects.com</value>
+                <value id="antom-marmot-tracker" type="host">*.marmot-cloud.com</value>
                 <value id="alipay-sdk" type="host">*.alipay.com</value>
             </values>
         </policy>
@@ -19,7 +20,8 @@
         <policy id="connect-src">
             <values>
                 <value id="antom-api" type="host">*.antom.com</value>
-                <value id="antom-alipay-tracker" type="host">https://gw.alipayobjects.com</value>
+                <value id="antom-alipay-tracker" type="host">*.alipayobjects.com</value>
+                <value id="antom-marmot-tracker" type="host">*.marmot-cloud.com</value>
                 <value id="alipay-api" type="host">*.alipay.com</value>
             </values>
         </policy>
