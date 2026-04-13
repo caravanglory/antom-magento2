@@ -89,6 +89,104 @@ use Magento\Framework\View\Element\Template;
             return response.json();
         }
 
+        async function queryOrderStatus() {
+            const antomConfig = getAntomConfig();
+            const url = window.BASE_URL + (antomConfig.orderStatusUrl || 'antom/payment/orderstatus');
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'include',
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to determine payment status');
+            }
+
+            return data;
+        }
+
+        function sleep(ms) {
+            return new Promise((resolve) => window.setTimeout(resolve, ms));
+        }
+
+        async function waitForOrderStatus() {
+            let lastResult = null;
+
+            for (let attempt = 0; attempt < 5; attempt += 1) {
+                lastResult = await queryOrderStatus();
+
+                if (lastResult.status === 'success' || lastResult.status === 'failed') {
+                    return lastResult;
+                }
+
+                if (lastResult.status !== 'processing') {
+                    return lastResult;
+                }
+
+                await sleep(3000);
+            }
+
+            return lastResult;
+        }
+
+        function getErrorMessage(error) {
+            return error?.result?.errorMessage
+                || error?.error?.message
+                || error?.message
+                || null;
+        }
+
+        function redirectToSuccess() {
+            destroySdk();
+            window.location.href = window.BASE_URL + 'checkout/onepage/success';
+        }
+
+        async function recoverPendingOrder(fallbackError) {
+            let orderStatus;
+
+            try {
+                orderStatus = await waitForOrderStatus();
+            } catch (error) {
+                if (fallbackError) {
+                    throw fallbackError;
+                }
+
+                throw error;
+            }
+
+            if (orderStatus?.status === 'success') {
+                redirectToSuccess();
+                return true;
+            }
+
+            if (orderStatus?.status === 'processing') {
+                throw new Error(
+                    orderStatus.message
+                    || 'Payment is still processing. Please wait a moment and check the order status again.'
+                );
+            }
+
+            if (orderStatus?.status === 'failed') {
+                throw new Error(
+                    orderStatus.message
+                    || getErrorMessage(fallbackError)
+                    || 'Payment failed. Please try again.'
+                );
+            }
+
+            if (fallbackError) {
+                throw fallbackError;
+            }
+
+            throw new Error(orderStatus?.message || 'Payment did not complete. Please try again.');
+        }
+
         function handleEventCallback() {
             // AMSElement resolves submitPayment() directly. Keep the callback wired for
             // SDK compatibility, but do not depend on legacy event codes here.
@@ -242,8 +340,7 @@ use Magento\Framework\View\Element\Template;
                             const paymentStatus = paymentResult?.status;
 
                             if (paymentStatus === 'SUCCESS') {
-                                destroySdk();
-                                window.location.href = window.BASE_URL + 'checkout/onepage/success';
+                                redirectToSuccess();
                                 return;
                             }
 
@@ -256,10 +353,18 @@ use Magento\Framework\View\Element\Template;
                                 throw new Error(errorMessage || 'Payment cancelled');
                             }
 
-                            throw new Error(errorMessage || 'Payment did not complete. Please try again.');
+                            // Antom can return an indeterminate result while the payment is
+                            // still being finalized. Query the server-side order status before
+                            // treating that response as a hard failure.
+                            await recoverPendingOrder(
+                                new Error(errorMessage || 'Payment did not complete. Please try again.')
+                            );
+                            return;
                         } catch (error) {
+                            await recoverPendingOrder(error);
+                            return;
+                        } finally {
                             submitting = false;
-                            throw error;
                         }
                     },
 

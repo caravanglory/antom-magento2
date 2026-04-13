@@ -91,6 +91,10 @@ class CreateQuoteSession implements HttpPostActionInterface
                 'amount' => $quote->getBaseGrandTotal(),
             ]);
 
+            // Persist the generated Antom session metadata so the quote-to-order
+            // conversion can carry the payment request reference forward.
+            $this->quoteRepository->save($quote);
+
             $sessionData = $payment->getAdditionalInformation('payment_session_data');
 
             if (empty($sessionData)) {
