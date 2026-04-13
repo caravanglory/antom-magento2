@@ -161,6 +161,10 @@ use Magento\Framework\View\Element\Template;
                         submitting = true;
 
                         try {
+                            // Create the Magento order first so Antom can resolve the
+                            // reference order while it processes the payment result.
+                            await fallback();
+
                             const paymentResult = await new Promise((resolve, reject) => {
                                 paymentResolve = resolve;
                                 paymentReject = reject;
@@ -168,7 +172,6 @@ use Magento\Framework\View\Element\Template;
                             });
 
                             if (paymentResult) {
-                                await fallback();
                                 destroySdk();
                                 window.location.href = window.BASE_URL + 'checkout/onepage/success';
                             }
