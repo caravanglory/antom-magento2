@@ -161,15 +161,29 @@ use Magento\Framework\View\Element\Template;
                         submitting = true;
 
                         try {
-                            // Create the Magento order first so Antom can resolve the
-                            // reference order while it processes the payment result.
-                            await fallback();
+                            let fallbackError = null;
+                            const fallbackPromise = Promise.resolve()
+                                .then(() => fallback())
+                                .catch((error) => {
+                                    fallbackError = error;
+                                    return null;
+                                });
 
+                            // Start Magento order creation immediately so the Antom
+                            // reference order exists while payment is processing, but
+                            // do not await the Magewire round-trip before submitting the
+                            // mounted SDK element.
                             const paymentResult = await new Promise((resolve, reject) => {
                                 paymentResolve = resolve;
                                 paymentReject = reject;
                                 elementInstance.submitPayment();
                             });
+
+                            await fallbackPromise;
+
+                            if (fallbackError) {
+                                throw fallbackError;
+                            }
 
                             if (paymentResult) {
                                 destroySdk();
