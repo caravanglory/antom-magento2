@@ -312,7 +312,8 @@ class Processor
         }
 
         $invoice = $this->invoiceService->prepareInvoice($order);
-        $invoice->setRequestedCaptureCase(Invoice::CAPTURE_ONLINE);
+        // Antom has already completed the capture by the time this notification arrives.
+        $invoice->setRequestedCaptureCase(Invoice::CAPTURE_OFFLINE);
         $invoice->setTransactionId($transactionId);
         $invoice->register();
 

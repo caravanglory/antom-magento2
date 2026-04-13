@@ -97,6 +97,7 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="create_session" xsi:type="string">AntomCreateSessionCommand</item>
+                <item name="initialize" xsi:type="string">CaravanGlory\Antom\Gateway\Command\InitializeCommand</item>
                 <item name="authorize" xsi:type="string">CaravanGlory\Antom\Gateway\Command\AuthorizeCommand</item>
                 <item name="capture" xsi:type="string">AntomCaptureCommand</item>
                 <item name="refund" xsi:type="string">AntomRefundCommand</item>

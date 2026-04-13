@@ -14,6 +14,7 @@
                 <model>AntomCcFacade</model>
                 <title>Credit or Debit Card</title>
                 <payment_action>authorize_capture</payment_action>
+                <can_initialize>1</can_initialize>
                 <is_gateway>1</is_gateway>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
@@ -31,6 +32,7 @@
                 <model>AntomGooglePayFacade</model>
                 <title>Google Pay</title>
                 <payment_action>authorize_capture</payment_action>
+                <can_initialize>1</can_initialize>
                 <is_gateway>1</is_gateway>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
@@ -50,6 +52,7 @@
                 <model>AntomApplePayFacade</model>
                 <title>Apple Pay</title>
                 <payment_action>authorize_capture</payment_action>
+                <can_initialize>1</can_initialize>
                 <is_gateway>1</is_gateway>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
@@ -69,6 +72,7 @@
                 <model>AntomHostedFacade</model>
                 <title>Hosted Payment</title>
                 <payment_action>authorize_capture</payment_action>
+                <can_initialize>1</can_initialize>
                 <is_gateway>1</is_gateway>
                 <can_authorize>1</can_authorize>
                 <can_capture>1</can_capture>
