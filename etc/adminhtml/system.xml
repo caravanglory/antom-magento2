@@ -35,7 +35,7 @@
                         <config_path>payment/antom/sandbox_client_id</config_path>
                     </field>
 
-                    <field id="sandbox_merchant_private_key" translate="label comment" type="textarea" sortOrder="20"
+                    <field id="sandbox_merchant_private_key" translate="label comment" type="obscure" sortOrder="20"
                            showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Merchant Private Key</label>
                         <comment>RSA private key for signing API requests (PEM format).</comment>
@@ -43,7 +43,7 @@
                         <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                     </field>
 
-                    <field id="sandbox_alipay_public_key" translate="label comment" type="textarea" sortOrder="30"
+                    <field id="sandbox_alipay_public_key" translate="label comment" type="obscure" sortOrder="30"
                            showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Alipay Public Key</label>
                         <comment>Antom/Alipay public key for verifying notification signatures (PEM format).</comment>
@@ -66,7 +66,7 @@
                         <config_path>payment/antom/live_client_id</config_path>
                     </field>
 
-                    <field id="live_merchant_private_key" translate="label comment" type="textarea" sortOrder="20"
+                    <field id="live_merchant_private_key" translate="label comment" type="obscure" sortOrder="20"
                            showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Merchant Private Key</label>
                         <comment>RSA private key for signing API requests (PEM format).</comment>
@@ -74,7 +74,7 @@
                         <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                     </field>
 
-                    <field id="live_alipay_public_key" translate="label comment" type="textarea" sortOrder="30"
+                    <field id="live_alipay_public_key" translate="label comment" type="obscure" sortOrder="30"
                            showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Alipay Public Key</label>
                         <comment>Antom/Alipay public key for verifying notification signatures (PEM format).</comment>
