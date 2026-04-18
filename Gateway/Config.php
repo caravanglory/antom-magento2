@@ -93,6 +93,21 @@ class Config
         return $value === '' ? null : strtoupper($value);
     }
 
+    /**
+     * 2-letter ISO 3166 code of the merchant's registered country at Antom.
+     * Sent as merchantRegion to the createPaymentSession API. Returns null when
+     * not configured so the request omits the field entirely.
+     */
+    public function getMerchantRegion(?int $storeId = null): ?string
+    {
+        $value = trim((string)$this->scopeConfig->getValue(
+            self::XML_PATH_PREFIX . 'merchant_region',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        ));
+        return $value === '' ? null : strtoupper($value);
+    }
+
     // ---------------------------------------------------------------
     // Per-method config (payment/{methodCode}/*)
     // ---------------------------------------------------------------

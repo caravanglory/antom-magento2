@@ -108,6 +108,15 @@
                     <config_path>payment/antom/settlement_currency</config_path>
                 </field>
 
+                <!-- 8. Merchant Region -->
+                <field id="merchant_region" translate="label comment" type="select" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Merchant Region</label>
+                    <comment>The country/region where the merchant account is registered with Antom (2-letter ISO 3166 code). Must match the region on your Antom merchant account, not the storefront country. Required for Global Acquirer Gateway (card acquiring).</comment>
+                    <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+                    <config_path>payment/antom/merchant_region</config_path>
+                </field>
+
                 <!-- ============================================================ -->
                 <!-- Credit / Debit Card                                          -->
                 <!-- ============================================================ -->

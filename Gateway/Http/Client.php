@@ -47,13 +47,13 @@ class Client implements ClientInterface
                 $this->logger->debug('Antom API request', [
                     'path' => $request->getPath(),
                     'body' => $this->redactSensitiveData(
-                        $this->objectToArray($request)
+                        $this->toAssocArray($request)
                     ),
                 ]);
             }
 
             $response = $client->execute($request);
-            $responseArray = $this->objectToArray($response);
+            $responseArray = $this->toAssocArray($response);
 
             if ($this->config->isDebugEnabled($storeId)) {
                 $this->logger->debug('Antom API response', [
@@ -83,20 +83,24 @@ class Client implements ClientInterface
         );
     }
 
-    private function objectToArray(mixed $data): array
+    /**
+     * Convert SDK request/response objects to a clean associative array via the
+     * SDK's own JsonSerializable implementation. Avoids the null-byte keys that
+     * a raw (array) cast produces for protected/private properties.
+     */
+    private function toAssocArray(mixed $data): array
     {
-        if (is_object($data)) {
-            $data = (array)$data;
+        if ($data === null) {
+            return [];
         }
 
-        if (is_array($data)) {
-            return array_map(
-                fn ($item) => is_object($item) || is_array($item) ? $this->objectToArray($item) : $item,
-                $data
-            );
+        $encoded = json_encode($data);
+        if ($encoded === false) {
+            return [];
         }
 
-        return [$data];
+        $decoded = json_decode($encoded, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function redactSensitiveData(array $data): array

@@ -6,12 +6,11 @@ namespace CaravanGlory\Antom\Gateway\Request;
 
 use CaravanGlory\Antom\Gateway\AmountConverter;
 use CaravanGlory\Antom\Gateway\Config;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Model\Amount;
+use Model\Buyer;
 use Model\Env;
 use Model\Order as AntomOrder;
 use Model\PaymentFactor;
@@ -24,16 +23,13 @@ class CreateSessionBuilder implements BuilderInterface
 {
     private Config $config;
     private StoreManagerInterface $storeManager;
-    private ScopeConfigInterface $scopeConfig;
 
     public function __construct(
         Config $config,
-        StoreManagerInterface $storeManager,
-        ScopeConfigInterface $scopeConfig
+        StoreManagerInterface $storeManager
     ) {
         $this->config = $config;
         $this->storeManager = $storeManager;
-        $this->scopeConfig = $scopeConfig;
     }
 
     public function build(array $buildSubject): array
@@ -54,10 +50,19 @@ class CreateSessionBuilder implements BuilderInterface
         $amount->setCurrency($currencyCode);
         $amount->setValue(AmountConverter::toMinorUnits($grandTotal, $currencyCode));
 
+        $customerId = $order->getCustomerId();
+        $referenceBuyerId = $customerId
+            ? 'customer_' . $customerId
+            : 'guest_' . $incrementId;
+
+        $buyer = new Buyer();
+        $buyer->setReferenceBuyerId($referenceBuyerId);
+
         $antomOrder = new AntomOrder();
         $antomOrder->setReferenceOrderId($incrementId);
         $antomOrder->setOrderAmount($amount);
         $antomOrder->setOrderDescription('Order #' . $incrementId);
+        $antomOrder->setBuyer($buyer);
 
         $paymentMethod = new PaymentMethod();
         $paymentMethod->setPaymentMethodType($paymentMethodType);
@@ -80,18 +85,17 @@ class CreateSessionBuilder implements BuilderInterface
         $request->setPaymentNotifyUrl($notifyUrl);
         $request->setPaymentRedirectUrl($redirectUrl);
 
-        $merchantRegion = (string)$this->scopeConfig->getValue(
-            'general/country/default',
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-        if ($merchantRegion !== '') {
+        $merchantRegion = $this->config->getMerchantRegion($storeId);
+        if ($merchantRegion !== null) {
             $request->setMerchantRegion($merchantRegion);
         }
 
-        $settlementStrategy = new SettlementStrategy();
-        $settlementStrategy->setSettlementCurrency($this->config->getSettlementCurrency($storeId));
-        $request->setSettlementStrategy($settlementStrategy);
+        $settlementCurrency = $this->config->getSettlementCurrency($storeId);
+        if ($settlementCurrency !== null) {
+            $settlementStrategy = new SettlementStrategy();
+            $settlementStrategy->setSettlementCurrency($settlementCurrency);
+            $request->setSettlementStrategy($settlementStrategy);
+        }
 
         $env = new Env();
         $env->setTerminalType('WEB');

@@ -8,6 +8,7 @@
                 <environment>sandbox</environment>
                 <debug>0</debug>
                 <settlement_currency>USD</settlement_currency>
+                <merchant_region/>
             </antom>
             <antom_cc>
                 <active>0</active>
