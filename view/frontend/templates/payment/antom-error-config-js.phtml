@@ -1,0 +1,93 @@
+<?php
+/**
+ * Antom error code dictionary + helper.
+ *
+ * Exposes window.antomErrorConfig (code → { message, supportRetry }) and
+ * window.antomGetErrorInfo(code) returning a normalized info object with a
+ * safe fallback. Consumed by antom-element-shared-csp-js.phtml. Designed so a
+ * future Luma renderer can load the same asset and share the dictionary.
+ *
+ * Error codes sourced from Antom's official Magento 2 reference plugin.
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var HyvaCsp $hyvaCsp */
+?>
+
+<script>
+    (function () {
+        // message = user-facing English; supportRetry = whether the same session can be retried.
+        // When supportRetry is false the client must destroy the element, cancel the Magento
+        // order (via antom/payment/restoreorder) and re-mount with a fresh session.
+        window.antomErrorConfig = {
+            UNKNOWN_EXCEPTION:                { message: 'Unknown exception. Please check your payment status and contact the merchant.', supportRetry: true },
+            USER_BALANCE_NOT_ENOUGH:          { message: 'Insufficient balance. Please top up or choose another payment method.',           supportRetry: true },
+            ORDER_NOT_EXIST:                  { message: 'Order status is abnormal. Please check your payment status and contact the merchant.', supportRetry: true },
+            PROCESS_FAIL:                     { message: 'Payment failed. Please check your payment status and contact the merchant.',     supportRetry: true },
+            ORDER_IS_CANCELLED:               { message: 'Order has been cancelled. Please refresh the page and try again.',               supportRetry: false },
+            RISK_REJECT:                      { message: 'Risk control rejected. Please try with a different card or contact your bank.', supportRetry: true },
+            ORDER_IS_CLOSED:                  { message: 'Order has been closed. Please refresh the page and try again.',                  supportRetry: false },
+            INQUIRY_PAYMENT_SESSION_FAILED:   { message: 'Payment session expired. Please refresh the page and try again.',                supportRetry: false },
+            ACCESS_DENIED:                    { message: 'Payment failed. Please check your payment status and contact the merchant.',     supportRetry: true },
+            CARD_EXPIRED:                     { message: 'Card has expired. Please check the expiry date or use another card.',            supportRetry: true },
+            INVALID_EXPIRY_DATE_FORMAT:       { message: 'Invalid expiry date format. Please check the expiry date or use another card.',  supportRetry: true },
+            INVALID_EXPIRATION_DATE:          { message: 'Invalid expiration date. Please check the expiry date or use another card.',     supportRetry: true },
+            INVALID_CVV:                      { message: 'Invalid CVV. Please check the CVV or use another card.',                         supportRetry: true },
+            INVALID_CARD_NUMBER:              { message: 'Invalid card number. Please try with a different card or contact your bank.',    supportRetry: true },
+            SELECTED_CARD_BRAND_NOT_AVAILABLE:{ message: 'Card brand not supported. Please try with a different card or contact your bank.', supportRetry: true },
+            CARD_NOT_SUPPORTED:               { message: 'Card not supported. Please try with a different card or contact your bank.',     supportRetry: true },
+            CARD_BIN_QUERY_ERROR:             { message: 'Invalid card number. Please try with a different card or contact your bank.',    supportRetry: true },
+            PAYMENT_IN_PROCESS:               { message: 'Payment is being processed. Please wait for completion.',                        supportRetry: true },
+            CURRENCY_NOT_SUPPORT:             { message: 'Currency not supported by merchant. Transaction cannot be initiated.',           supportRetry: true },
+            INVALID_CARD:                     { message: 'Invalid card. Please check card details or use another card.',                   supportRetry: true },
+            ISSUER_REJECTS_TRANSACTION:       { message: 'Transaction rejected by issuing bank. Please try with a different card or contact your bank.', supportRetry: true },
+            INVALID_MERCHANT_STATUS:          { message: 'Merchant status is abnormal. Please refresh the page and try again.',            supportRetry: false },
+            KEY_NOT_FOUND:                    { message: 'Unknown exception. Please check your payment status and contact the merchant.',  supportRetry: false },
+            MERCHANT_KYB_NOT_QUALIFIED:       { message: 'Merchant status is abnormal. Please refresh the page and try again.',            supportRetry: false },
+            NO_PAY_OPTIONS:                   { message: 'No payment options available. Please refresh the page and try again.',           supportRetry: false },
+            PARAM_ILLEGAL:                    { message: 'Unknown exception. Please check your payment status and contact the merchant.',  supportRetry: false },
+            PAYMENT_AMOUNT_EXCEED_LIMIT:      { message: 'Payment amount exceeds limit. Please refresh the page and try with a lower amount.', supportRetry: false },
+            PAYMENT_COUNT_EXCEED_LIMIT:       { message: 'Payment count exceeds limit. Please refresh the page and try again.',            supportRetry: false },
+            PAYMENT_NOT_QUALIFIED:            { message: 'Merchant status is abnormal. Please refresh the page and try again.',            supportRetry: false },
+            SUSPECTED_CARD:                   { message: 'Risk control rejected. Please try with a different card or contact your bank.', supportRetry: true },
+            SYSTEM_ERROR:                     { message: 'System error. Please check your payment status and contact the merchant.',       supportRetry: true },
+            USER_AMOUNT_EXCEED_LIMIT:         { message: 'Amount exceeds limit. Please try with an amount within your available balance.', supportRetry: true },
+            USER_KYC_NOT_QUALIFIED:           { message: 'User status is abnormal. Please try with a different card or payment method.',   supportRetry: true },
+            USER_PAYMENT_VERIFICATION_FAILED: { message: 'User status is abnormal. Please try with a different card or contact your bank.', supportRetry: true },
+            USER_STATUS_ABNORMAL:             { message: 'User status is abnormal. Please try with a different card or contact your bank.', supportRetry: true },
+            DO_NOT_HONOR:                     { message: 'Payment rejected by issuing bank. Please try with a different card or contact your bank.', supportRetry: true },
+            EXTERNAL_RESOURCE_LOAD_FAILED:    { message: 'Request failed. Please check your network connection or device status.',         supportRetry: true },
+            SUBMIT_PAYMENT_TIMEOUT:           { message: 'Request timeout. Transaction cannot be initiated.',                              supportRetry: true },
+            PAYMENT_RESULT_TIMEOUT:           { message: 'Request timeout. Transaction cannot be initiated.',                              supportRetry: true },
+            ERR_DATA_STRUCT_UNRECOGNIZED:     { message: 'Request failed. Transaction cannot be initiated.',                               supportRetry: false },
+            USER_CANCELED:                    { message: 'Payment has been cancelled by user.',                                            supportRetry: true },
+            FORM_INVALID:                     { message: 'Payment information is invalid.',                                                supportRetry: true }
+        };
+
+        window.antomGetErrorInfo = function (code) {
+            if (code && window.antomErrorConfig[code]) {
+                return {
+                    code: code,
+                    message: window.antomErrorConfig[code].message,
+                    supportRetry: window.antomErrorConfig[code].supportRetry
+                };
+            }
+
+            return {
+                code: code || 'UNKNOWN',
+                message: 'Payment did not complete. Please try again or contact the merchant.',
+                // Unknown codes default to retry-safe so the user isn't forced into
+                // an unnecessary session reset for a transient issue.
+                supportRetry: true
+            };
+        };
+    })();
+</script>
+<?php $hyvaCsp->registerInlineScript(); ?>

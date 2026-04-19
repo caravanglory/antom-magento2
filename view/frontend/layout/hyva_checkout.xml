@@ -6,7 +6,10 @@
     </head>
     <body>
         <referenceContainer name="hyva.checkout.api-v1.payment-methods">
+            <block name="antom.error.config.js"
+                   template="CaravanGlory_Antom::payment/antom-error-config-js.phtml"/>
             <block name="antom.element.shared.csp.js"
+                   after="antom.error.config.js"
                    template="CaravanGlory_Antom::payment/antom-element-shared-csp-js.phtml"/>
             <block name="antom.card.csp.js"
                    after="antom.element.shared.csp.js"

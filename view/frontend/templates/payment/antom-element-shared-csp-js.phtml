@@ -147,6 +147,66 @@ use Magento\Framework\View\Element\Template;
             window.location.href = window.BASE_URL + 'checkout/onepage/success';
         }
 
+        function redirectToProcessing() {
+            destroySdk();
+            const antomConfig = getAntomConfig();
+            const path = antomConfig.processingUrl || 'antom/payment/processing';
+            window.location.href = window.BASE_URL + path;
+        }
+
+        async function restoreOrder() {
+            const antomConfig = getAntomConfig();
+            const url = window.BASE_URL + (antomConfig.restoreOrderUrl || 'antom/payment/restoreorder');
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({})
+                });
+            } catch (e) {
+                // Non-fatal: restore failing must not hide the primary payment error.
+                console.error('Antom restoreOrder failed', e);
+            }
+        }
+
+        async function reMountElement() {
+            destroySdk();
+            // Brief delay lets the server-side restoreQuote settle before we
+            // reserve a new order id + create a fresh Antom session.
+            await new Promise((resolve) => window.setTimeout(resolve, 1000));
+            try {
+                await initializeElement();
+            } catch (e) {
+                console.error('Failed to re-mount Antom element', e);
+            }
+        }
+
+        /**
+         * Translate an Antom submitPayment() error into a user-facing Error.
+         * When the error code is terminal (supportRetry=false) the caller-side
+         * session cannot be reused; we cancel the Magento order and remount a
+         * fresh session before throwing so the customer has a usable form.
+         */
+        async function handlePaymentError(error) {
+            const info = window.antomGetErrorInfo
+                ? window.antomGetErrorInfo(error && error.code)
+                : { code: error && error.code, message: error && error.message, supportRetry: true };
+
+            if (!info.supportRetry) {
+                await restoreOrder();
+                await reMountElement();
+            }
+
+            const finalError = new Error(info.message || (error && error.message) || 'Payment did not complete. Please try again.');
+            finalError.antomErrorCode = info.code;
+            finalError.antomRecoveryAttempted = true;
+            throw finalError;
+        }
+
         async function recoverPendingOrder(fallbackError) {
             let orderStatus;
 
@@ -267,7 +327,22 @@ use Magento\Framework\View\Element\Template;
                     onEventCallback: handleEventCallback
                 });
 
-                await elementInstance.mount({ type: 'payment' }, '#' + CONTAINER_ID);
+                // AMSElement.mount() resolves even when mounting fails — the
+                // error is carried on the resolved value, not as a rejection.
+                // Treat a resolved-with-error as a hard failure so we don't
+                // show the customer an empty container with no feedback.
+                const mountResult = await elementInstance.mount(
+                    { type: 'payment', notRedirectAfterComplete: true },
+                    '#' + CONTAINER_ID
+                );
+                const mountError = mountResult && mountResult.error;
+                if (mountError && (mountError.code || mountError.message)) {
+                    elementInstance = null;
+                    const info = window.antomGetErrorInfo
+                        ? window.antomGetErrorInfo(mountError.code)
+                        : { message: mountError.message };
+                    throw new Error(info.message || mountError.message || 'Failed to load payment form.');
+                }
             })().finally(() => {
                 initializePromise = null;
             });
@@ -336,7 +411,15 @@ use Magento\Framework\View\Element\Template;
                     },
 
                     async placeOrder({ fallback }) {
-                        if (submitting || !elementInstance) return;
+                        if (submitting) {
+                            return;
+                        }
+                        if (!elementInstance) {
+                            // Surface a real error instead of silently returning — a silent
+                            // return lets Hyva treat order.place as a success and navigate
+                            // to the confirmation page even though nothing was charged.
+                            throw new Error('Payment form is not ready. Please wait a moment and try again.');
+                        }
                         submitting = true;
 
                         try {
@@ -346,36 +429,39 @@ use Magento\Framework\View\Element\Template;
                             await fallback();
 
                             const paymentResult = await elementInstance.submitPayment();
-                            const paymentStatus = paymentResult?.status;
+                            const status = paymentResult && paymentResult.status;
+                            const error = paymentResult && paymentResult.error;
+                            const userCanceled3D = paymentResult && paymentResult.userCanceled3D;
 
-                            if (paymentStatus === 'SUCCESS') {
+                            if (status === 'SUCCESS' && !error) {
                                 redirectToSuccess();
                                 return;
                             }
 
-                            const errorMessage = paymentResult?.error?.message;
-                            if (paymentStatus === 'FAIL' || paymentStatus === 'ERROR') {
-                                throw new Error(errorMessage || 'Payment failed. Please try again.');
+                            // 3DS cancellation and in-flight processing aren't hard failures;
+                            // the authoritative status lives server-side and will arrive via
+                            // Antom's async notification. Park the user on the processing
+                            // page so it polls /antom/payment/orderstatus.
+                            if (userCanceled3D || status === 'PROCESSING' || status === 'PENDING') {
+                                redirectToProcessing();
+                                return;
                             }
 
-                            if (paymentStatus === 'CANCEL') {
-                                throw new Error(errorMessage || 'Payment cancelled');
+                            if (error) {
+                                await handlePaymentError(error);
+                                return;
                             }
 
-                            // Antom can return an indeterminate result while the payment is
-                            // still being finalized. Query the server-side order status before
-                            // treating that response as a hard failure.
+                            // SDK returned neither success nor error (unexpected shape).
+                            // Fall back to the server-side status poller to decide.
                             await recoverPendingOrder(
-                                new Error(errorMessage || 'Payment did not complete. Please try again.')
+                                new Error('Payment did not complete. Please try again.')
                             );
-                            return;
-                        } catch (error) {
-                            if (error?.antomRecoveryAttempted) {
-                                throw error;
+                        } catch (e) {
+                            if (e && e.antomRecoveryAttempted) {
+                                throw e;
                             }
-
-                            await recoverPendingOrder(error);
-                            return;
+                            await recoverPendingOrder(e);
                         } finally {
                             submitting = false;
                         }

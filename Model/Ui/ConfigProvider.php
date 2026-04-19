@@ -35,6 +35,7 @@ class ConfigProvider implements ConfigProviderInterface
                 self::CODE_CC => [
                     'isActive' => $this->config->isMethodActive(self::CODE_CC, $storeId),
                     'sdkEnvironment' => $this->config->getSdkEnvironment($storeId),
+                    'sdkUrl' => $this->config->getSdkUrl(),
                 ],
                 self::CODE_GOOGLEPAY => [
                     'isActive' => $this->config->isMethodActive(self::CODE_GOOGLEPAY, $storeId),

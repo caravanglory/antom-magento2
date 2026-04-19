@@ -272,6 +272,12 @@
         </arguments>
     </type>
 
+    <type name="CaravanGlory\Antom\Controller\Payment\RestoreOrder">
+        <arguments>
+            <argument name="logger" xsi:type="object">AntomLogger</argument>
+        </arguments>
+    </type>
+
     <type name="CaravanGlory\Antom\Model\Notification\Processor">
         <arguments>
             <argument name="logger" xsi:type="object">AntomLogger</argument>

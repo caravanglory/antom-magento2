@@ -2,6 +2,14 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="antom_config_provider" xsi:type="object">CaravanGlory\Antom\Model\Ui\ConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
     <type name="Hyva\Checkout\Model\Magewire\Payment\PlaceOrderServiceProvider">
         <arguments>
             <argument name="placeOrderServiceList" xsi:type="array">
